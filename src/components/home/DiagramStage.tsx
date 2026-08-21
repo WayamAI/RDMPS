@@ -226,7 +226,7 @@ export default function DiagramStage() {
             {/* board title block */}
             <div className="absolute z-20 bg-board" style={{ left: BOARD_PAD, top: BOARD_PAD, width: BAND_W }}>
               <div className="flex items-center gap-3">
-                <img src="/logo.svg" alt="" className="h-10 w-10" />
+                <img src="/wayam-favicon.svg" alt="" className="h-10 w-10 rounded-lg" />
                 <h1 className="font-display text-[24px] font-bold tracking-tight text-ink">
                   {titleWords.map((w, i) => (
                     <motion.span

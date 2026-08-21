@@ -35,7 +35,7 @@ export default function Footer() {
       <div className="mx-auto grid max-w-[1200px] gap-10 px-6 py-14 md:grid-cols-[1.4fr_1fr_1fr]">
         <div>
           <div className="flex items-center gap-3">
-            <img src="/logo.svg" alt="RDPMS POC logo" className="h-10 w-10" />
+            <img src="/wayam-favicon.svg" alt="Wayam logo" className="h-10 w-10 rounded-lg" />
             <div>
               <div className="font-display text-lg font-bold text-text-primary">RDPMS POC</div>
               <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-text-quaternary">
@@ -92,7 +92,14 @@ export default function Footer() {
       <div className="border-t border-stroke-muted">
         <div className="mx-auto flex max-w-[1200px] flex-wrap items-center justify-between gap-2 px-6 py-4 font-mono text-[11px] text-text-quaternary">
           <span>RDPMS POC LLD · built to RDSO/SPN/257/2025 v2.0</span>
-          <span>Engineering dossier · seven layers · one station</span>
+          <div className="flex items-center gap-2">
+            <span>Engineering dossier · seven layers · one station</span>
+            <span className="mx-1 h-3 w-px bg-stroke-default" />
+            <span className="flex items-center gap-1.5">
+              Powered by
+              <img src="/wayam-favicon.svg" alt="Wayam" className="h-4 w-4 rounded" />
+            </span>
+          </div>
         </div>
       </div>
     </motion.footer>

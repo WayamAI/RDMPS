@@ -88,7 +88,7 @@ export default function Navbar() {
       <div className="mx-auto flex h-full max-w-[1560px] items-center justify-between gap-3 px-4 lg:px-6">
         {/* Brand */}
         <Link to="/" className="flex min-w-0 items-center gap-3">
-          <img src="/logo.svg" alt="RDPMS POC logo" className="h-9 w-9 shrink-0" />
+          <img src="/wayam-favicon.svg" alt="Wayam logo" className="h-9 w-9 shrink-0 rounded-lg" />
           <div className="min-w-0 leading-tight">
             <div className="font-display text-[17px] font-bold text-text-primary">RDPMS POC</div>
             <div className="hidden truncate font-mono text-[10px] uppercase tracking-[0.08em] text-text-quaternary xl:block">
