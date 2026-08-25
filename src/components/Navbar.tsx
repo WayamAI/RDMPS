@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Download, Minus, Plus, Check, Menu, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useDiagram } from '@/lib/diagram-context';
-import type { FlowMode } from '@/lib/diagram-context';
+import type { DiagramLayout, FlowMode } from '@/lib/diagram-context';
 
 const NAV_LINKS = [
   { to: '/', label: 'LLD Diagram' },
@@ -12,6 +12,42 @@ const NAV_LINKS = [
   { to: '/field-assets', label: 'Field Assets' },
   { to: '/spec', label: 'Requirements' },
 ];
+
+function LayoutToggle() {
+  const { layout, setLayout } = useDiagram();
+  const options: { id: DiagramLayout; label: string }[] = [
+    { id: 'landscape', label: 'Wide' },
+    { id: 'portrait', label: 'Vertical' },
+  ];
+  return (
+    <div className="flex items-center rounded-full bg-raised p-1" role="tablist" aria-label="Diagram layout">
+      {options.map((opt) => {
+        const active = layout === opt.id;
+        return (
+          <button
+            key={opt.id}
+            role="tab"
+            aria-selected={active}
+            onClick={() => setLayout(opt.id)}
+            className={cn(
+              'relative rounded-full px-2.5 py-1 text-[12px] font-medium transition-colors',
+              active ? 'text-flow-required' : 'text-text-tertiary hover:text-text-primary',
+            )}
+          >
+            {active && (
+              <motion.span
+                layoutId="layout-toggle-thumb"
+                className="absolute inset-0 rounded-full bg-raised-2 shadow-sm"
+                transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+              />
+            )}
+            <span className="relative z-10 whitespace-nowrap">{opt.label}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
 
 function FlowToggle() {
   const { mode, setMode } = useDiagram();
@@ -97,7 +133,7 @@ export default function Navbar() {
         </Link>
 
         {/* Desktop nav */}
-        <nav className="hidden items-center gap-1 md:flex">
+        <nav className="hidden min-w-0 items-center gap-1 lg:flex">
           {NAV_LINKS.map((l) => (
             <NavLink
               key={l.to}
@@ -117,13 +153,14 @@ export default function Navbar() {
         </nav>
 
         {/* Right cluster */}
-        <div className="flex items-center gap-1.5">
+        <div className="flex shrink-0 items-center gap-1.5">
           {isHome && (
             <>
-              <div className="hidden lg:block">
+              <div className="hidden items-center gap-1.5 lg:flex">
+                <LayoutToggle />
                 <FlowToggle />
               </div>
-              <div className="hidden items-center gap-1 md:flex" aria-label="Zoom controls">
+              <div className="hidden items-center gap-1 xl:flex" aria-label="Zoom controls">
                 <motion.button whileTap={{ scale: 0.95 }} className={zoomBtn} onClick={zoomOut} disabled={!controlsReady} aria-label="Zoom out">
                   <Minus className="h-3.5 w-3.5" />
                 </motion.button>
@@ -133,7 +170,7 @@ export default function Navbar() {
                 </motion.button>
                 <motion.button
                   whileTap={{ scale: 0.95 }}
-                  className="h-7 rounded-md border border-stroke-default bg-container px-2 font-mono text-[10px] font-medium text-text-tertiary transition-colors hover:border-flow-required-soft hover:text-text-primary active:scale-95 cursor-pointer disabled:opacity-50"
+                  className="h-7 shrink-0 rounded-md border border-stroke-default bg-container px-2 font-mono text-[10px] font-medium text-text-tertiary transition-colors hover:border-flow-required-soft hover:text-text-primary active:scale-95 cursor-pointer disabled:opacity-50"
                   onClick={fit}
                   disabled={!controlsReady}
                 >
@@ -144,25 +181,25 @@ export default function Navbar() {
           )}
 
           {isHome && (
-            <div className="hidden items-center gap-1 sm:flex">
+            <div className="hidden shrink-0 items-center gap-1 sm:flex">
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.97 }}
                 onClick={() => handleDownload('landscape')}
                 disabled={!controlsReady}
-                className="flex h-8 items-center gap-2 rounded-lg bg-flow-required px-3 text-[12px] font-semibold text-white transition-colors hover:bg-[#c24a0a] disabled:opacity-50 cursor-pointer"
+                className="flex h-8 shrink-0 items-center gap-2 whitespace-nowrap rounded-lg bg-flow-required px-3 text-[12px] font-semibold text-white transition-colors hover:bg-[#c24a0a] disabled:opacity-50 cursor-pointer"
               >
-                {saved ? <Check className="h-4 w-4 text-white" /> : <Download className="h-4 w-4" />}
-                <span>{saved ? 'SVG saved' : 'Download SVG'}</span>
+                {saved ? <Check className="h-4 w-4 shrink-0 text-white" /> : <Download className="h-4 w-4 shrink-0" />}
+                <span className="whitespace-nowrap">{saved ? 'SVG saved' : 'Download SVG'}</span>
               </motion.button>
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.97 }}
                 onClick={() => handleDownload('portrait')}
                 disabled={!controlsReady}
-                className="flex h-8 items-center rounded-lg border border-stroke-default bg-container px-2.5 text-[12px] font-semibold text-text-secondary transition-colors hover:border-flow-required-soft hover:text-text-primary disabled:opacity-50 cursor-pointer"
+                className="flex h-8 shrink-0 items-center whitespace-nowrap rounded-lg border border-stroke-default bg-container px-2.5 text-[12px] font-semibold text-text-secondary transition-colors hover:border-flow-required-soft hover:text-text-primary disabled:opacity-50 cursor-pointer"
               >
-                Vertical
+                Vertical SVG
               </motion.button>
             </div>
           )}
@@ -170,7 +207,7 @@ export default function Navbar() {
           {/* Mobile menu button */}
           <button
             onClick={() => setMobileOpen((v) => !v)}
-            className="flex h-9 w-9 items-center justify-center rounded-md border border-stroke-default bg-container text-text-tertiary md:hidden cursor-pointer"
+            className="flex h-9 w-9 items-center justify-center rounded-md border border-stroke-default bg-container text-text-tertiary lg:hidden cursor-pointer"
             aria-label="Toggle menu"
             aria-expanded={mobileOpen}
           >
@@ -187,7 +224,7 @@ export default function Navbar() {
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-            className="overflow-hidden border-b border-stroke-default bg-page md:hidden"
+            className="overflow-hidden border-b border-stroke-default bg-page lg:hidden"
           >
             <nav className="flex flex-col gap-1 px-4 py-3">
               {NAV_LINKS.map((l) => (
@@ -207,6 +244,9 @@ export default function Navbar() {
               ))}
               {isHome && (
                 <div className="mt-2 flex flex-col gap-3 border-t border-stroke-default pt-3">
+                  <div className="flex justify-center">
+                    <LayoutToggle />
+                  </div>
                   <div className="flex justify-center">
                     <FlowToggle />
                   </div>
@@ -229,15 +269,15 @@ export default function Navbar() {
                   <button
                     onClick={() => handleDownload('landscape')}
                     disabled={!controlsReady}
-                    className="flex h-9 items-center justify-center gap-2 rounded-lg bg-flow-required px-3.5 text-[13px] font-semibold text-white disabled:opacity-50"
+                    className="flex h-9 w-full shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-lg bg-flow-required px-3.5 text-[13px] font-semibold text-white disabled:opacity-50"
                   >
-                    {saved ? <Check className="h-4 w-4 text-white" /> : <Download className="h-4 w-4" />}
-                    <span>{saved ? 'SVG saved' : 'Download SVG'}</span>
+                    {saved ? <Check className="h-4 w-4 shrink-0 text-white" /> : <Download className="h-4 w-4 shrink-0" />}
+                    <span className="whitespace-nowrap">{saved ? 'SVG saved' : 'Download SVG'}</span>
                   </button>
                   <button
                     onClick={() => handleDownload('portrait')}
                     disabled={!controlsReady}
-                    className="flex h-9 items-center justify-center rounded-lg border border-stroke-default bg-container px-3.5 text-[13px] font-semibold text-text-secondary disabled:opacity-50"
+                    className="flex h-9 w-full shrink-0 items-center justify-center whitespace-nowrap rounded-lg border border-stroke-default bg-container px-3.5 text-[13px] font-semibold text-text-secondary disabled:opacity-50"
                   >
                     Vertical SVG
                   </button>

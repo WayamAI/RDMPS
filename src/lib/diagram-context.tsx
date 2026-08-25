@@ -1,7 +1,9 @@
 import { createContext, useCallback, useContext, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
+import type { DiagramOrientation } from '@/components/home/diagramModel';
 
 export type FlowMode = 'all' | 'required';
+export type DiagramLayout = DiagramOrientation;
 
 export interface DiagramControls {
   zoomIn: () => void;
@@ -13,6 +15,8 @@ export interface DiagramControls {
 interface DiagramState {
   mode: FlowMode;
   setMode: (m: FlowMode) => void;
+  layout: DiagramLayout;
+  setLayout: (layout: DiagramLayout) => void;
   /** current zoom 0.4 – 1.4, reported by the stage for the % readout */
   zoom: number;
   setZoom: (z: number) => void;
@@ -29,6 +33,7 @@ const DiagramContext = createContext<DiagramState | null>(null);
 
 export function DiagramProvider({ children }: { children: ReactNode }) {
   const [mode, setMode] = useState<FlowMode>('all');
+  const [layout, setLayout] = useState<DiagramLayout>('landscape');
   const [zoom, setZoom] = useState(0.88);
   const [controlsReady, setControlsReady] = useState(false);
   const controlsRef = useRef<DiagramControls | null>(null);
@@ -50,6 +55,8 @@ export function DiagramProvider({ children }: { children: ReactNode }) {
     () => ({
       mode,
       setMode,
+      layout,
+      setLayout,
       zoom,
       setZoom,
       registerControls,
@@ -59,7 +66,7 @@ export function DiagramProvider({ children }: { children: ReactNode }) {
       downloadSvg,
       controlsReady,
     }),
-    [mode, zoom, registerControls, zoomIn, zoomOut, fit, downloadSvg, controlsReady],
+    [mode, layout, zoom, registerControls, zoomIn, zoomOut, fit, downloadSvg, controlsReady],
   );
 
   return <DiagramContext.Provider value={value}>{children}</DiagramContext.Provider>;

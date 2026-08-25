@@ -5,16 +5,17 @@ import { useDiagram } from '@/lib/diagram-context';
 import { Icon, Icon3D } from '@/components/home/atoms';
 import {
   BANDS,
-  BOARD_H,
   BOARD_PAD,
-  BOARD_W,
-  BAND_H,
   BAND_W,
   HEADER_H,
   RAIL_W,
   RAIL_GAP,
   FLOW_COLOR,
+  bandX,
   bandY,
+  bandWidth,
+  bandHeight,
+  boardSize,
   cardRect,
   buildConnectors,
   exportSvg,
@@ -55,8 +56,9 @@ const RAIL_X = BOARD_PAD + BAND_W + RAIL_GAP;
 type ViewState = { scale: number; x: number; y: number };
 
 export default function DiagramStage() {
-  const { mode, setZoom, registerControls } = useDiagram();
-  const connectors = useMemo(() => buildConnectors(), []);
+  const { mode, layout, setZoom, registerControls } = useDiagram();
+  const board = useMemo(() => boardSize(layout), [layout]);
+  const connectors = useMemo(() => buildConnectors(layout), [layout]);
   const visibleConnectors = useMemo(
     () => connectors.filter(({ scope }) => isScopeVisible(mode, scope)),
     [connectors, mode],
@@ -73,6 +75,11 @@ export default function DiagramStage() {
     ox: 0,
     oy: 0,
   });
+  const compact = layout === 'portrait';
+  const maxColH = useMemo(
+    () => Math.max(...BANDS.map((_, i) => bandHeight(i, layout))),
+    [layout],
+  );
 
   /** Keep the board covering the viewport — no empty gaps around it. */
   const clampView = useCallback((v: ViewState): ViewState => {
@@ -80,12 +87,12 @@ export default function DiagramStage() {
     if (!vp) return v;
     const vw = vp.clientWidth;
     const vh = vp.clientHeight;
-    const bw = BOARD_W * v.scale;
-    const bh = BOARD_H * v.scale;
+    const bw = board.w * v.scale;
+    const bh = board.h * v.scale;
     const x = bw <= vw ? (vw - bw) / 2 : Math.min(0, Math.max(vw - bw, v.x));
     const y = bh <= vh ? (vh - bh) / 2 : Math.min(0, Math.max(vh - bh, v.y));
     return { ...v, x, y };
-  }, []);
+  }, [board.h, board.w]);
 
   const setClampedView = useCallback(
     (next: ViewState | ((v: ViewState) => ViewState)) => {
@@ -98,22 +105,22 @@ export default function DiagramStage() {
     (next: number) => {
       const clamped = Math.min(1.4, Math.max(0.4, next));
       setClampedView((v) => {
-        const vw = viewportRef.current?.clientWidth ?? BOARD_W;
+        const vw = viewportRef.current?.clientWidth ?? board.w;
         const cx = (vw / 2 - v.x) / v.scale;
         const nx = vw / 2 - cx * clamped;
         return { scale: clamped, x: nx, y: v.y };
       });
       setZoom(clamped);
     },
-    [setZoom, setClampedView],
+    [board.w, setZoom, setClampedView],
   );
 
   const fit = useCallback(() => {
-    const vw = viewportRef.current?.clientWidth ?? BOARD_W;
-    const scale = Math.min(1.4, Math.max(0.4, (vw - 32) / BOARD_W));
-    setClampedView({ scale, x: (vw - BOARD_W * scale) / 2, y: 0 });
+    const vw = viewportRef.current?.clientWidth ?? board.w;
+    const scale = Math.min(1.4, Math.max(0.4, (vw - 32) / board.w));
+    setClampedView({ scale, x: (vw - board.w * scale) / 2, y: 0 });
     setZoom(scale);
-  }, [setZoom, setClampedView]);
+  }, [board.w, setZoom, setClampedView]);
 
   const downloadSvg = useCallback(async (orientation: 'landscape' | 'portrait' = 'landscape') => {
     try {
@@ -207,10 +214,17 @@ export default function DiagramStage() {
 
   // initial fit on small screens
   useEffect(() => {
-    const vw = viewportRef.current?.clientWidth ?? BOARD_W;
-    if (vw < BOARD_W * 0.88) fit();
+    const vw = viewportRef.current?.clientWidth ?? board.w;
+    if (vw < board.w * 0.88) fit();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const layoutRef = useRef(layout);
+  useEffect(() => {
+    if (layoutRef.current === layout) return;
+    layoutRef.current = layout;
+    fit();
+  }, [fit, layout]);
 
   // clamp the initial view so the board never starts with empty gaps
   useEffect(() => {
@@ -267,7 +281,7 @@ export default function DiagramStage() {
           data-view-scale={view.scale}
           animate={{ x: view.x, y: view.y, scale: view.scale }}
           transition={isDragging ? { duration: 0 } : { type: 'spring', stiffness: 260, damping: 30 }}
-          style={{ width: BOARD_W, height: BOARD_H, transformOrigin: '0 0' }}
+          style={{ width: board.w, height: board.h, transformOrigin: '0 0' }}
           className="absolute left-0 top-0"
         >
           <motion.div
@@ -276,7 +290,7 @@ export default function DiagramStage() {
             transition={{ duration: 0.6, ease: EASE }}
             data-flow-mode={mode}
             className="relative rounded-3xl border border-stroke-default bg-board shadow-2xl shadow-black/10"
-            style={{ width: BOARD_W, height: BOARD_H }}
+            style={{ width: board.w, height: board.h }}
           >
             {/* Required-system mode floating chip */}
             <AnimatePresence>
@@ -293,10 +307,10 @@ export default function DiagramStage() {
             </AnimatePresence>
 
             {/* board title block */}
-            <div className="absolute z-20 bg-board" style={{ left: BOARD_PAD, top: BOARD_PAD, width: BAND_W }}>
+            <div className="absolute z-20 bg-board" style={{ left: BOARD_PAD, top: BOARD_PAD, width: compact ? board.w - BOARD_PAD * 2 : BAND_W }}>
               <div className="flex items-center gap-3">
-                <img src="/wayam-favicon.svg" alt="" width="40" height="40" className="h-10 w-10 rounded-lg" />
-                <h1 id="lld-diagram-title" className="text-balance font-display text-[24px] font-bold tracking-tight text-ink">
+                <img src="/wayam-favicon.svg" alt="" width="40" height="40" className={cn('rounded-lg', compact ? 'h-8 w-8' : 'h-10 w-10')} />
+                <h1 id="lld-diagram-title" className={cn('text-balance font-display font-bold tracking-tight text-ink', compact ? 'text-[18px]' : 'text-[24px]')}>
                   {titleWords.map((w, i) => (
                     <motion.span
                       key={i}
@@ -328,7 +342,12 @@ export default function DiagramStage() {
                   'band-tint absolute rounded-2xl border z-0 bg-band',
                   band.requiredTint ? 'band-tint-required border-flow-required-soft/40' : 'border-band-border',
                 )}
-                style={{ left: BOARD_PAD, top: bandY(b), width: BAND_W, height: BAND_H }}
+                style={{
+                  left: bandX(b, layout),
+                  top: bandY(b, layout),
+                  width: bandWidth(layout),
+                  height: bandHeight(b, layout),
+                }}
               />
             ))}
 
@@ -336,9 +355,9 @@ export default function DiagramStage() {
             <svg
               className="pointer-events-none absolute z-10"
               style={{ left: 0, top: 0 }}
-              width={BOARD_W}
-              height={BOARD_H}
-              viewBox={`0 0 ${BOARD_W} ${BOARD_H}`}
+              width={board.w}
+              height={board.h}
+              viewBox={`0 0 ${board.w} ${board.h}`}
             >
               <defs>
                 {(['required', 'site-dependent', 'future-compatible', 'alert'] as FlowType[]).map((t) => (
@@ -397,20 +416,32 @@ export default function DiagramStage() {
             {/* 2.5 LAYER: Band title chips  above lines and particles so text stays clean (z-25) */}
             <div className="pointer-events-none absolute inset-0 z-[25]">
               {BANDS.map((band, b) => {
-                const y = bandY(b);
+                const y = bandY(b, layout);
                 return (
                   <div
                     key={`h${band.num}`}
                     className={cn(
-                      'absolute flex w-auto items-center gap-2.5 rounded-tl-2xl rounded-br-xl pl-4 pr-4',
+                      'absolute flex items-center gap-2 rounded-tl-2xl rounded-br-xl pl-2 pr-2',
+                      compact ? 'w-auto max-w-full flex-wrap py-1' : 'w-auto gap-2.5 pl-4 pr-4',
                       band.requiredTint ? 'bg-flow-required-bg' : 'bg-band',
                     )}
-                    style={{ left: BOARD_PAD, top: y, height: HEADER_H }}
+                    style={{
+                      left: bandX(b, layout),
+                      top: y,
+                      width: compact ? bandWidth(layout) : undefined,
+                      height: compact ? 52 : HEADER_H,
+                    }}
                   >
-                    <span className="flex h-[26px] w-[30px] items-center justify-center rounded-md bg-flow-required font-mono text-[13px] font-bold text-white">
+                    <span className={cn(
+                      'flex items-center justify-center rounded-md bg-flow-required font-mono font-bold text-white',
+                      compact ? 'h-5 w-6 text-[11px]' : 'h-[26px] w-[30px] text-[13px]',
+                    )}>
                       {band.num}
                     </span>
-                    <span className="font-display text-[12px] font-semibold uppercase tracking-[0.08em] text-ink">
+                    <span className={cn(
+                      'font-display font-semibold uppercase text-ink',
+                      compact ? 'max-w-[210px] text-[8px] leading-tight tracking-[0.04em]' : 'text-[12px] tracking-[0.08em]',
+                    )}>
                       {band.title}
                     </span>
                   </div>
@@ -442,7 +473,7 @@ export default function DiagramStage() {
               {BANDS.map((band, b) =>
                 band.cards.map((card, i) => {
                   if (!isScopeVisible(mode, card.status)) return null;
-                  const r = cardRect(b, i);
+                  const r = cardRect(b, i, layout);
                   const cardKey = `${b}-${i}`;
                   const detailsId = card.popoverImg ? `card-details-${cardKey}` : undefined;
                   return (
@@ -458,7 +489,8 @@ export default function DiagramStage() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.3 + b * 0.08 + i * 0.03, duration: 0.4, ease: EASE }}
                       className={cn(
-                        'diagram-card group absolute flex flex-col justify-between rounded-2xl border bg-container p-3 shadow-xs focus-visible:ring-2 focus-visible:ring-flow-required focus-visible:ring-offset-2',
+                        'diagram-card group absolute flex flex-col justify-between rounded-2xl border bg-container shadow-xs focus-visible:ring-2 focus-visible:ring-flow-required focus-visible:ring-offset-2',
+                        compact ? 'p-2' : 'p-3',
                         card.status === 'future-compatible'
                           ? 'border-dashed border-[#94A3B8]'
                           : card.status === 'site-dependent'
@@ -476,7 +508,8 @@ export default function DiagramStage() {
                         <div className="flex items-center justify-between gap-1">
                           <span
                             className={cn(
-                              'flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white ring-1 ring-black/5',
+                              'flex shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white ring-1 ring-black/5',
+                              compact ? 'h-11 w-11' : 'h-16 w-16',
                             )}
                           >
                             <Icon3D id={card.icon} className="h-full w-full" />
@@ -494,9 +527,9 @@ export default function DiagramStage() {
                             {card.status}
                           </span>
                         </div>
-                        <div className="mt-1.5 text-[11.5px] font-bold leading-tight text-ink line-clamp-2">{card.title}</div>
+                        <div className={cn('mt-1.5 font-bold leading-tight text-ink line-clamp-2', compact ? 'text-[9.5px]' : 'text-[11.5px]')}>{card.title}</div>
                       </div>
-                      <div className="font-mono text-[9px] leading-[1.3] text-ink-soft whitespace-pre-line">
+                      <div className={cn('font-mono leading-[1.3] text-ink-soft whitespace-pre-line', compact ? 'line-clamp-2 text-[7.5px]' : 'text-[9px]')}>
                         {card.sub}
                       </div>
                       {card.popoverImg && (
@@ -535,14 +568,68 @@ export default function DiagramStage() {
               )}
             </div>
 
-            {/* 6. LAYER: Right Rail (z-40) */}
+            {/* 6. LAYER: Right Rail (z-40) or bottom rail in vertical view */}
             <motion.div
               initial={{ opacity: 0, y: 24 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.25 + 7 * 0.09 + 0.12, duration: 0.5, ease: EASE }}
-              className="absolute space-y-4 z-40"
-              style={{ left: RAIL_X, top: bandY(0), width: RAIL_W }}
+              className={cn('absolute z-40', compact ? 'flex flex-col justify-center gap-2 rounded-xl border border-band-border bg-band px-4 py-3' : 'space-y-4')}
+              style={
+                compact
+                  ? {
+                      left: BOARD_PAD,
+                      top: bandY(0, layout) + maxColH + 16,
+                      width: board.w - BOARD_PAD * 2,
+                      height: 108,
+                    }
+                  : { left: RAIL_X, top: bandY(0), width: RAIL_W }
+              }
             >
+              {compact ? (
+                <>
+                  <div className="flex flex-wrap items-center gap-x-5 gap-y-1">
+                    <span className="font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-ink-faint">Legend</span>
+                    {(
+                      [
+                        ['required', 'REQUIRED · DELIVERED CAPABILITY'],
+                        ['site-dependent', 'SITE-DEPENDENT · MEDIA CHOSEN LOCALLY'],
+                        ['alert', 'ALERT / ESCALATION PATH'],
+                        ['future-compatible', 'FUTURE-COMPATIBLE · NOT CURRENT DELIVERY'],
+                      ].filter(([status]) => mode === 'all' || status === 'required' || status === 'alert') as [FlowType, string][]
+                    ).map(([t, label]) => (
+                      <span key={t} className="flex items-center gap-2">
+                        <svg width="28" height="8" className="shrink-0">
+                          <line
+                            x1="0"
+                            y1="4"
+                            x2="28"
+                            y2="4"
+                            stroke={FLOW_COLOR[t]}
+                            strokeWidth="2"
+                            strokeDasharray={t === 'future-compatible' ? '5 4' : undefined}
+                          />
+                          <circle cx="14" cy="4" r="3" fill={FLOW_COLOR[t]} />
+                        </svg>
+                        <span className="font-mono text-[8px] uppercase tracking-wide text-ink-soft">{label}</span>
+                      </span>
+                    ))}
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-ink-faint">
+                      Cross-cutting concerns
+                    </span>
+                    {['Security & PKI', 'Time Sync', 'Health', 'Governance', 'Interoperability'].map((title) => (
+                      <span
+                        key={title}
+                        className="rounded-md border border-band-border bg-container px-2 py-1 font-mono text-[9px] font-semibold text-ink"
+                      >
+                        {title}
+                      </span>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <>
               {/* legend */}
               <div className="rounded-xl border border-band-border bg-band p-4 shadow-xs">
                 <div className="font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-ink-faint">Legend</div>
@@ -622,6 +709,8 @@ export default function DiagramStage() {
                   feedback links.
                 </p>
               </div>
+                </>
+              )}
             </motion.div>
           </motion.div>
         </motion.div>

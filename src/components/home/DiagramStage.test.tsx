@@ -4,7 +4,9 @@ import { readFileSync } from 'node:fs';
 import { cleanup, createEvent, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { MemoryRouter } from 'react-router';
 import { DiagramProvider, useDiagram } from '@/lib/diagram-context';
+import Navbar from '@/components/Navbar';
 import DiagramStage from './DiagramStage';
 
 function iconResponse(input: RequestInfo | URL) {
@@ -45,6 +47,27 @@ describe('DiagramStage interactions', () => {
   afterEach(() => {
     cleanup();
     vi.unstubAllGlobals();
+  });
+
+  it('rearranges the live board into side-by-side layers when vertical view is selected', async () => {
+    const user = userEvent.setup();
+    render(
+      <MemoryRouter>
+        <DiagramProvider>
+          <Navbar />
+          <DiagramStage />
+        </DiagramProvider>
+      </MemoryRouter>,
+    );
+
+    const field0 = screen.getByRole('article', { name: /Point machines/i });
+    const field2 = screen.getByRole('article', { name: /^Signals/i });
+    expect(field2.style.top).toBe(field0.style.top);
+
+    await user.click(screen.getByRole('tab', { name: 'Vertical' }));
+
+    expect(Number.parseFloat(field2.style.top)).toBeGreaterThan(Number.parseFloat(field0.style.top));
+    expect(screen.getByRole('tab', { name: 'Vertical' }).getAttribute('aria-selected')).toBe('true');
   });
 
   it('renders locally stored 3D JPEG artwork on diagram cards', () => {
