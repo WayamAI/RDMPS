@@ -10,6 +10,94 @@ const modelCopy = () =>
     ...buildConnectors().flatMap((connector) => connector.label ?? []),
   ].join(' | ');
 
+function pathPoints(d: string): { x: number; y: number }[] {
+  if (!d) return [];
+  const pts: { x: number; y: number }[] = [];
+  const tokens = d.match(/[MLQC][^MLQC]*/g) ?? [];
+  let x = 0;
+  let y = 0;
+  for (const token of tokens) {
+    const kind = token[0];
+    const nums = [...token.slice(1).matchAll(/-?\d+(?:\.\d+)?/g)].map((m) => Number(m[0]));
+    if (kind === 'M' || kind === 'L') {
+      for (let i = 0; i < nums.length; i += 2) {
+        x = nums[i];
+        y = nums[i + 1];
+        pts.push({ x, y });
+      }
+    } else if (kind === 'Q') {
+      for (let i = 0; i < nums.length; i += 4) {
+        const x1 = nums[i];
+        const y1 = nums[i + 1];
+        const x2 = nums[i + 2];
+        const y2 = nums[i + 3];
+        for (let t = 1; t <= 4; t++) {
+          const u = t / 4;
+          pts.push({
+            x: (1 - u) * (1 - u) * x + 2 * (1 - u) * u * x1 + u * u * x2,
+            y: (1 - u) * (1 - u) * y + 2 * (1 - u) * u * y1 + u * u * y2,
+          });
+        }
+        x = x2;
+        y = y2;
+      }
+    } else if (kind === 'C') {
+      for (let i = 0; i < nums.length; i += 6) {
+        const x1 = nums[i];
+        const y1 = nums[i + 1];
+        const x2 = nums[i + 2];
+        const y2 = nums[i + 3];
+        const x3 = nums[i + 4];
+        const y3 = nums[i + 5];
+        for (let t = 1; t <= 6; t++) {
+          const u = t / 6;
+          const w = 1 - u;
+          pts.push({
+            x: w * w * w * x + 3 * w * w * u * x1 + 3 * w * u * u * x2 + u * u * u * x3,
+            y: w * w * w * y + 3 * w * w * u * y1 + 3 * w * u * u * y2 + u * u * u * y3,
+          });
+        }
+        x = x3;
+        y = y3;
+      }
+    }
+  }
+  return pts;
+}
+
+function samplePath(d: string): { x: number; y: number }[] {
+  const pts = pathPoints(d);
+  const samples: { x: number; y: number }[] = [];
+  for (let i = 0; i < pts.length - 1; i++) {
+    const a = pts[i];
+    const b = pts[i + 1];
+    const steps = Math.max(1, Math.ceil(Math.hypot(b.x - a.x, b.y - a.y) / 3));
+    for (let s = 0; s <= steps; s++) {
+      const t = s / steps;
+      samples.push({ x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t });
+    }
+  }
+  return samples;
+}
+
+function insideCard(p: { x: number; y: number }, r: { x: number; y: number; w: number; h: number }, inset = 5) {
+  return p.x > r.x + inset && p.x < r.x + r.w - inset && p.y > r.y + inset && p.y < r.y + r.h - inset;
+}
+
+function boxesOverlap(
+  a: { x: number; y: number; w: number; h: number },
+  b: { x: number; y: number; w: number; h: number },
+) {
+  return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+}
+
+function pathCrossesCards(d: string, rects: { x: number; y: number; w: number; h: number }[]) {
+  const samples = samplePath(d);
+  if (samples.length < 6) return [];
+  const interior = samples.slice(4, -4);
+  return rects.filter((rect) => interior.some((p) => insideCard(p, rect)));
+}
+
 describe('LLD capability model', () => {
   it('structurally traces every required card to existing approved evidence', () => {
     const approvedIds = new Set(
@@ -193,6 +281,26 @@ describe('LLD capability model', () => {
     expect(svg).toContain('FUTURE-COMPATIBLE');
     expect(svg).toContain('connector-draw');
     expect(svg).toContain('<animateMotion');
+  });
+
+  it('keeps portrait arrows and labels off the cards so titles stay readable', () => {
+    const connectors = buildConnectors('portrait');
+    const rects = BANDS.flatMap((band, b) => band.cards.map((_, i) => cardRect(b, i, 'portrait')));
+    const arrowHits = connectors.flatMap((connector) =>
+      pathCrossesCards(connector.d, rects).map((card) => ({
+        label: connector.label ?? connector.d.slice(0, 80),
+        card,
+      })),
+    );
+    const labelHits = connectors.flatMap((connector) => {
+      if (!connector.label || !connector.labelAt) return [];
+      const w = connector.label.length * 5.4 + 20;
+      const box = { x: connector.labelAt.x - w / 2, y: connector.labelAt.y - 11, w, h: 22 };
+      return rects.filter((card) => boxesOverlap(box, card)).map((card) => ({ label: connector.label, card }));
+    });
+
+    expect(arrowHits).toEqual([]);
+    expect(labelHits).toEqual([]);
   });
 
   it('exports a compact side-by-side layers SVG', () => {

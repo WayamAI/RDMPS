@@ -28,11 +28,12 @@ export type DiagramOrientation = 'landscape' | 'portrait';
 
 const PORTRAIT_CARD = 118;
 const PORTRAIT_PAIR = 2;
-const PORTRAIT_CARD_GAP = 10;
+const PORTRAIT_CARD_GAP = 18;
 const PORTRAIT_COL_PAD = 12;
 const PORTRAIT_COL_W = PORTRAIT_COL_PAD * 2 + PORTRAIT_PAIR * PORTRAIT_CARD + PORTRAIT_CARD_GAP;
-const PORTRAIT_COL_GAP = 18;
+const PORTRAIT_COL_GAP = 40;
 const PORTRAIT_COL_HEADER = 52;
+const PORTRAIT_COL_FOOTER = 72;
 const PORTRAIT_TITLE_H = 76;
 const PORTRAIT_RAIL_GAP = 16;
 const PORTRAIT_RAIL_H = 108;
@@ -210,7 +211,12 @@ export function bandX(b: number, orientation: DiagramOrientation = 'landscape') 
 export function bandHeight(b: number, orientation: DiagramOrientation = 'landscape') {
   if (orientation === 'landscape') return BAND_H;
   const rows = Math.ceil(BANDS[b].cards.length / PORTRAIT_PAIR);
-  return PORTRAIT_COL_HEADER + rows * PORTRAIT_CARD + Math.max(0, rows - 1) * PORTRAIT_CARD_GAP + 12;
+  return (
+    PORTRAIT_COL_HEADER +
+    rows * PORTRAIT_CARD +
+    Math.max(0, rows - 1) * PORTRAIT_CARD_GAP +
+    PORTRAIT_COL_FOOTER
+  );
 }
 
 export function bandY(b: number, orientation: DiagramOrientation = 'landscape') {
@@ -254,6 +260,110 @@ export function cardRect(b: number, i: number, orientation: DiagramOrientation =
   const x = BOARD_PAD + BAND_PAD_X + i * (CARD_SIZE + gap);
   const y = bandY(b) + CARD_TOP;
   return { x, y, w: CARD_SIZE, h: CARD_SIZE };
+}
+
+function portraitCell(b: number, i: number) {
+  const n = BANDS[b].cards.length;
+  const col = i % PORTRAIT_PAIR;
+  const row = Math.floor(i / PORTRAIT_PAIR);
+  const colsInRow = Math.min(PORTRAIT_PAIR, n - row * PORTRAIT_PAIR);
+  return { col, row, centered: colsInRow === 1, n };
+}
+
+function portraitGutterX(fromBand: number, lane = 0) {
+  const left = bandX(fromBand, 'portrait') + PORTRAIT_COL_W;
+  const right = bandX(fromBand + 1, 'portrait');
+  return (left + right) / 2 + Math.max(-16, Math.min(16, (lane - 2) * 5));
+}
+
+function portraitPairGapX(b: number) {
+  const left = cardRect(b, 0, 'portrait');
+  return left.x + left.w + PORTRAIT_CARD_GAP / 2;
+}
+
+function portraitChannelY(b: number, i: number) {
+  const r = cardRect(b, i, 'portrait');
+  return r.y - PORTRAIT_CARD_GAP / 2;
+}
+
+function portraitMidY(b: number, i: number, dx = 0) {
+  const r = cardRect(b, i, 'portrait');
+  return r.y + r.h / 2 + Math.max(-22, Math.min(22, dx * 0.35));
+}
+
+function portraitFacesGutter(b: number, i: number) {
+  const cell = portraitCell(b, i);
+  return cell.centered || cell.col === 1;
+}
+
+function portraitHasCardBelow(b: number, i: number) {
+  const r = cardRect(b, i, 'portrait');
+  return BANDS[b].cards.some((_, j) => {
+    if (j === i) return false;
+    const other = cardRect(b, j, 'portrait');
+    const overlap = other.x < r.x + r.w - 8 && other.x + other.w > r.x + 8;
+    return overlap && other.y > r.y + r.h - 1;
+  });
+}
+
+function exitToGutter(b: number, i: number, gx: number, y: number): { x: number; y: number }[] {
+  const r = cardRect(b, i, 'portrait');
+  if (portraitFacesGutter(b, i)) {
+    return [
+      { x: r.x + r.w, y },
+      { x: gx, y },
+    ];
+  }
+  const gapX = portraitPairGapX(b);
+  const channelY = portraitChannelY(b, i);
+  return [
+    { x: r.x + r.w, y },
+    { x: gapX, y },
+    { x: gapX, y: channelY },
+    { x: gx, y: channelY },
+  ];
+}
+
+function enterFromGutter(b: number, i: number, gx: number, y: number): { x: number; y: number }[] {
+  const r = cardRect(b, i, 'portrait');
+  const cell = portraitCell(b, i);
+  if (cell.col === 0 || cell.centered) {
+    return [
+      { x: gx, y },
+      { x: r.x, y },
+    ];
+  }
+  const gapX = portraitPairGapX(b);
+  const channelY = portraitChannelY(b, i);
+  return [
+    { x: gx, y: channelY },
+    { x: gapX, y: channelY },
+    { x: gapX, y },
+    { x: r.x, y },
+  ];
+}
+
+function dockPortraitLabels(connectors: Connector[]) {
+  const used = new Map<number, number>();
+  for (const connector of connectors) {
+    if (!connector.label || !connector.labelAt) continue;
+    let best = 0;
+    let bestDist = Infinity;
+    for (let b = 0; b < BANDS.length; b++) {
+      const cx = bandX(b, 'portrait') + PORTRAIT_COL_W / 2;
+      const dist = Math.abs(cx - connector.labelAt.x);
+      if (dist < bestDist) {
+        bestDist = dist;
+        best = b;
+      }
+    }
+    const slot = used.get(best) ?? 0;
+    used.set(best, slot + 1);
+    connector.labelAt = {
+      x: bandX(best, 'portrait') + PORTRAIT_COL_W / 2,
+      y: bandY(best, 'portrait') + bandHeight(best, 'portrait') - 14 - slot * 18,
+    };
+  }
 }
 
 export type AnchorSide = 'top' | 'bottom' | 'left' | 'right';
@@ -412,24 +522,17 @@ function vConn(
   const ori = opts?.orientation ?? 'landscape';
   const scope: Scope = type === 'alert' ? 'required' : type;
   if (ori === 'portrait') {
-    const a = anchor(b1, c1, 'right', ori);
-    const z = anchor(b2, c2, 'left', ori);
-    const y1 = a.y + (opts?.dx1 ?? 0);
-    const y2 = z.y + (opts?.dx2 ?? 0);
     const lane = opts?.lane ?? 0;
-    const gapX = (a.x + z.x) / 2 + (lane - 0.5) * 8;
+    const gx = portraitGutterX(b1, lane);
+    const y1 = portraitMidY(b1, c1, opts?.dx1 ?? 0);
+    const y2 = portraitMidY(b2, c2, opts?.dx2 ?? 0);
     return {
-      d: roundedPoly([
-        { x: a.x, y: y1 },
-        { x: gapX, y: y1 },
-        { x: gapX, y: y2 },
-        { x: z.x, y: y2 },
-      ]),
+      d: roundedPoly([...exitToGutter(b1, c1, gx, y1), ...enterFromGutter(b2, c2, gx, y2)]),
       type,
       scope,
       particles,
       label: opts?.label,
-      labelAt: opts?.label ? { x: gapX, y: (y1 + y2) / 2 } : undefined,
+      labelAt: opts?.label ? { x: gx, y: (y1 + y2) / 2 } : undefined,
     };
   }
   const a = anchor(b1, c1, 'bottom', ori);
@@ -452,12 +555,57 @@ function hConn(
   c2: number,
   type: FlowType,
   particles: number,
-  opts?: { label?: string; dy?: number; orientation?: DiagramOrientation },
+  opts?: { label?: string; dy?: number; orientation?: DiagramOrientation; dashed?: boolean },
 ): Connector {
   const ori = opts?.orientation ?? 'landscape';
+  const scope: Scope = type === 'alert' ? 'required' : type;
+  if (ori === 'portrait') {
+    const from = cardRect(b, c1, ori);
+    const to = cardRect(b, c2, ori);
+    if (Math.abs(from.y - to.y) < 8) {
+      const y = from.y + from.h / 2 + (opts?.dy ?? 0);
+      const x1 = from.x < to.x ? from.x + from.w : from.x;
+      const x2 = from.x < to.x ? to.x : to.x + to.w;
+      return {
+        d: hPath(x1, y, x2),
+        type,
+        scope,
+        particles,
+        dashed: opts?.dashed,
+        label: opts?.label,
+        labelAt: opts?.label ? { x: (x1 + x2) / 2, y: y - 14 } : undefined,
+      };
+    }
+    if (Math.abs(from.x - to.x) < 8) {
+      const down = from.y < to.y;
+      const a = { x: from.x + from.w / 2, y: down ? from.y + from.h : from.y };
+      const z = { x: to.x + to.w / 2, y: down ? to.y : to.y + to.h };
+      return {
+        d: `M ${a.x} ${a.y} L ${z.x} ${z.y}`,
+        type,
+        scope,
+        particles,
+        dashed: opts?.dashed,
+        label: opts?.label,
+        labelAt: opts?.label ? { x: a.x, y: (a.y + z.y) / 2 } : undefined,
+      };
+    }
+    const down = from.y < to.y;
+    const a = down ? anchor(b, c1, 'bottom', ori) : anchor(b, c1, 'top', ori);
+    const z = down ? anchor(b, c2, 'top', ori) : anchor(b, c2, 'bottom', ori);
+    const midY = (a.y + z.y) / 2;
+    return {
+      d: roundedPoly([a, { x: a.x, y: midY }, { x: z.x, y: midY }, z]),
+      type,
+      scope,
+      particles,
+      dashed: opts?.dashed,
+      label: opts?.label,
+      labelAt: opts?.label ? { x: (a.x + z.x) / 2, y: midY } : undefined,
+    };
+  }
   const right = anchor(b, c1, 'right', ori);
   const left = anchor(b, c2, 'left', ori);
-  const scope: Scope = type === 'alert' ? 'required' : type;
   if (Math.abs(right.y - left.y) < 8) {
     const y = right.y + (opts?.dy ?? 0);
     return {
@@ -465,6 +613,7 @@ function hConn(
       type,
       scope,
       particles,
+      dashed: opts?.dashed,
       label: opts?.label,
       labelAt: opts?.label ? { x: (right.x + left.x) / 2, y: y - 14 } : undefined,
     };
@@ -483,6 +632,7 @@ function hConn(
     type,
     scope,
     particles,
+    dashed: opts?.dashed,
     label: opts?.label,
     labelAt: opts?.label ? { x: (a.x + z.x) / 2, y: (a.y + z.y) / 2 } : undefined,
   };
@@ -499,9 +649,13 @@ function stub(
   dashed = false,
   orientation: DiagramOrientation = 'landscape',
 ): Connector {
-  const a = anchor(b, c, side, orientation);
-  const x2 = side === 'right' ? a.x + len : side === 'left' ? a.x - len : a.x;
-  const y2 = side === 'bottom' ? a.y + len : side === 'top' ? a.y - len : a.y;
+  let usedSide = side;
+  if (orientation === 'portrait' && side === 'bottom' && portraitHasCardBelow(b, c)) {
+    usedSide = portraitFacesGutter(b, c) ? 'right' : 'left';
+  }
+  const a = anchor(b, c, usedSide, orientation);
+  const x2 = usedSide === 'right' ? a.x + len : usedSide === 'left' ? a.x - len : a.x;
+  const y2 = usedSide === 'bottom' ? a.y + len : usedSide === 'top' ? a.y - len : a.y;
   return {
     d: `M ${a.x} ${a.y} L ${x2} ${y2}`,
     type,
@@ -511,7 +665,12 @@ function stub(
     noArrow: true,
     terminator: { x: x2, y: y2, kind: dashed ? 'open' : 'dot' },
     label,
-    labelAt: label ? { x: (a.x + x2) / 2, y: y2 + (side === 'bottom' ? 20 : side === 'top' ? -20 : 0) } : undefined,
+    labelAt: label
+      ? {
+          x: (a.x + x2) / 2,
+          y: y2 + (usedSide === 'bottom' ? 20 : usedSide === 'top' ? -20 : -16),
+        }
+      : undefined,
   };
 }
 
@@ -543,7 +702,7 @@ export function buildConnectors(orientation: DiagramOrientation = 'landscape'): 
     c2: number,
     type: FlowType,
     particles: number,
-    opts?: { label?: string; dy?: number },
+    opts?: { label?: string; dy?: number; dashed?: boolean },
   ) => hConn(b, c1, c2, type, particles, { ...opts, orientation });
   const st = (
     b: number,
@@ -567,11 +726,11 @@ export function buildConnectors(orientation: DiagramOrientation = 'landscape'): 
 
   // Band 02 -> 03 (nodes converge on aggregator, with FIFO chip)
   if (orientation === 'portrait') {
-    const busX = bandX(2, orientation) - PORTRAIT_COL_GAP / 2;
+    const busX = portraitGutterX(1, 1);
     for (let i = 0; i < 4; i++) {
-      const a = anc(1, i, 'right');
+      const y = portraitMidY(1, i);
       c.push({
-        d: `M ${a.x} ${a.y} L ${busX} ${a.y}`,
+        d: roundedPoly(exitToGutter(1, i, busX, y)),
         type: 'required',
         scope: 'required',
         particles: 1,
@@ -579,7 +738,7 @@ export function buildConnectors(orientation: DiagramOrientation = 'landscape'): 
       });
     }
     const aggLeft = anc(2, 0, 'left');
-    const busTop = anc(1, 0, 'right');
+    const busTop = exitToGutter(1, 0, busX, portraitMidY(1, 0)).at(-1)!;
     c.push({
       d: roundedPoly([
         { x: busX, y: busTop.y },
@@ -596,7 +755,7 @@ export function buildConnectors(orientation: DiagramOrientation = 'landscape'): 
       scope: 'required',
       particles: 0,
       label: '≥10 LAKH EVENT FIFO',
-      labelAt: { x: busX, y: (busTop.y + aggLeft.y) / 2 },
+      labelAt: { x: bandX(1, orientation) + PORTRAIT_COL_W / 2, y: bandY(1, orientation) + 24 },
     });
   } else {
     const aggTop = anc(2, 0, 'top');
@@ -672,14 +831,31 @@ export function buildConnectors(orientation: DiagramOrientation = 'landscape'): 
   // mandatory parallel path relationship between Railway and mobile uplinks
   const ofc = rect(3, 0);
   const g4 = rect(3, 1);
-  c.push({
-    d: `M ${ofc.x + ofc.w - 18} ${ofc.y + ofc.h + 8} C ${ofc.x + ofc.w + 12} ${ofc.y + ofc.h + 36}, ${g4.x + 12} ${g4.y + g4.h + 36}, ${g4.x + 24} ${g4.y + g4.h + 8}`,
-    type: 'required',
-    scope: 'required',
-    particles: 1,
-    label: 'MANDATORY PARALLEL / REDUNDANT PATHS',
-    labelAt: { x: (ofc.x + ofc.w + g4.x) / 2, y: ofc.y + ofc.h + 46 },
-  });
+  if (orientation === 'portrait') {
+    const braceY = Math.min(ofc.y, g4.y) - PORTRAIT_CARD_GAP / 2;
+    c.push({
+      d: roundedPoly([
+        { x: ofc.x + ofc.w / 2, y: ofc.y },
+        { x: ofc.x + ofc.w / 2, y: braceY },
+        { x: g4.x + g4.w / 2, y: braceY },
+        { x: g4.x + g4.w / 2, y: g4.y },
+      ]),
+      type: 'required',
+      scope: 'required',
+      particles: 1,
+      label: 'MANDATORY PARALLEL / REDUNDANT PATHS',
+      labelAt: { x: (ofc.x + g4.x + g4.w) / 2, y: braceY },
+    });
+  } else {
+    c.push({
+      d: `M ${ofc.x + ofc.w - 18} ${ofc.y + ofc.h + 8} C ${ofc.x + ofc.w + 12} ${ofc.y + ofc.h + 36}, ${g4.x + 12} ${g4.y + g4.h + 36}, ${g4.x + 24} ${g4.y + g4.h + 8}`,
+      type: 'required',
+      scope: 'required',
+      particles: 1,
+      label: 'MANDATORY PARALLEL / REDUNDANT PATHS',
+      labelAt: { x: (ofc.x + ofc.w + g4.x) / 2, y: ofc.y + ofc.h + 46 },
+    });
+  }
   // future CCSP dashed continuation
   c.push(st(3, 3, 'bottom', 26, 'future-compatible', 'FUTURE SHARED-SERVICE MIGRATION', true));
 
@@ -713,64 +889,92 @@ export function buildConnectors(orientation: DiagramOrientation = 'landscape'): 
   c.push(vc(4, 2, 5, 0, 'required', 2, { lane: 0 }));
 
   // Band 06 internal: 0->1, 0->2, 1->3, 2->4, 1->6, 2->6
-  c.push(hc(5, 0, 1, 'required', 1, { dy: -14 }));
-  c.push(hc(5, 1, 3, 'required', 1, { dy: -14 }));
-  // 0 -> 2 and 2 -> 4 routed below cards
+  c.push(hc(5, 0, 1, 'required', 1, { dy: orientation === 'portrait' ? 0 : -14 }));
+  c.push(hc(5, 1, 3, 'required', 1, { dy: orientation === 'portrait' ? 0 : -14 }));
   const r0 = rect(5, 0);
   const r2 = rect(5, 2);
   const r4 = rect(5, 4);
   const r6 = rect(5, 6);
   const r1 = rect(5, 1);
-  c.push({
-    d: `M ${r0.x + r0.w / 2} ${r0.y + r0.h} L ${r0.x + r0.w / 2} ${r0.y + r0.h + 16} L ${r2.x + r2.w / 2} ${r2.y + r2.h + 16} L ${r2.x + r2.w / 2} ${r2.y + r2.h}`,
-    type: 'required',
-    scope: 'required',
-    particles: 1,
-  });
-  c.push({
-    d: `M ${r2.x + r2.w / 2 + 16} ${r2.y + r2.h} L ${r2.x + r2.w / 2 + 16} ${r2.y + r2.h + 32} L ${r4.x + r4.w / 2} ${r4.y + r4.h + 32} L ${r4.x + r4.w / 2} ${r4.y + r4.h}`,
-    type: 'required',
-    scope: 'required',
-    particles: 1,
-  });
-  // feedback labels back to ML (2 <- 4), dashed
-  c.push({
-    d: `M ${r4.x + r4.w / 2 - 16} ${r4.y + r4.h} L ${r4.x + r4.w / 2 - 16} ${r4.y + r4.h + 46} L ${r2.x + r2.w / 2 - 16} ${r2.y + r2.h + 46} L ${r2.x + r2.w / 2 - 16} ${r2.y + r2.h}`,
-    type: 'required',
-    scope: 'required',
-    particles: 0,
-    dashed: true,
-    label: 'ML LABELS',
-    labelAt: { x: (r2.x + r4.x) / 2 - 30, y: r4.y + r4.h + 58 },
-  });
-  // taps to data lake (6) with rolling-averages chip
-  c.push({
-    d: `M ${r1.x + r1.w / 2 + 14} ${r1.y + r1.h} L ${r1.x + r1.w / 2 + 14} ${r1.y + r1.h + 32} L ${r6.x + r6.w / 2} ${r6.y + r6.h + 32} L ${r6.x + r6.w / 2} ${r6.y + r6.h}`,
-    type: 'required',
-    scope: 'required',
-    particles: 1,
-    label: '15-DAY ROLLING AVERAGES',
-    labelAt: { x: (r1.x + r1.w + r6.x) / 2, y: r6.y + r6.h + 46 },
-  });
-  c.push({
-    d: `M ${r2.x + r2.w / 2 + 40} ${r2.y + r2.h} L ${r2.x + r2.w / 2 + 40} ${r2.y + r2.h + 16} L ${r6.x + r6.w / 2 - 16} ${r6.y + r6.h + 16} L ${r6.x + r6.w / 2 - 16} ${r6.y + r6.h}`,
-    type: 'required',
-    scope: 'required',
-    particles: 1,
-  });
+  if (orientation === 'portrait') {
+    c.push(hc(5, 0, 2, 'required', 1));
+    c.push(hc(5, 2, 4, 'required', 1));
+    c.push(hc(5, 4, 2, 'required', 0, { dashed: true, label: 'ML LABELS' }));
+    const spine = (from: number, to: number, lane: number, label?: string): Connector => {
+      const start = rect(5, from);
+      const end = rect(5, to);
+      const gx = portraitPairGapX(5) + (lane - 0.5) * 6;
+      const y1 = start.y + start.h / 2;
+      const fromX = start.x < gx ? start.x + start.w : start.x;
+      const channelY = end.y - PORTRAIT_CARD_GAP / 2;
+      return {
+        d: roundedPoly([
+          { x: fromX, y: y1 },
+          { x: gx, y: y1 },
+          { x: gx, y: channelY },
+          { x: end.x + end.w / 2, y: channelY },
+          { x: end.x + end.w / 2, y: end.y },
+        ]),
+        type: 'required',
+        scope: 'required',
+        particles: 1,
+        label,
+        labelAt: label ? { x: gx, y: (y1 + channelY) / 2 } : undefined,
+      };
+    };
+    c.push(spine(1, 6, 0, '15-DAY ROLLING AVERAGES'));
+    c.push(spine(2, 6, 1));
+  } else {
+    c.push({
+      d: `M ${r0.x + r0.w / 2} ${r0.y + r0.h} L ${r0.x + r0.w / 2} ${r0.y + r0.h + 16} L ${r2.x + r2.w / 2} ${r2.y + r2.h + 16} L ${r2.x + r2.w / 2} ${r2.y + r2.h}`,
+      type: 'required',
+      scope: 'required',
+      particles: 1,
+    });
+    c.push({
+      d: `M ${r2.x + r2.w / 2 + 16} ${r2.y + r2.h} L ${r2.x + r2.w / 2 + 16} ${r2.y + r2.h + 32} L ${r4.x + r4.w / 2} ${r4.y + r4.h + 32} L ${r4.x + r4.w / 2} ${r4.y + r4.h}`,
+      type: 'required',
+      scope: 'required',
+      particles: 1,
+    });
+    c.push({
+      d: `M ${r4.x + r4.w / 2 - 16} ${r4.y + r4.h} L ${r4.x + r4.w / 2 - 16} ${r4.y + r4.h + 46} L ${r2.x + r2.w / 2 - 16} ${r2.y + r2.h + 46} L ${r2.x + r2.w / 2 - 16} ${r2.y + r2.h}`,
+      type: 'required',
+      scope: 'required',
+      particles: 0,
+      dashed: true,
+      label: 'ML LABELS',
+      labelAt: { x: (r2.x + r4.x) / 2 - 30, y: r4.y + r4.h + 58 },
+    });
+    c.push({
+      d: `M ${r1.x + r1.w / 2 + 14} ${r1.y + r1.h} L ${r1.x + r1.w / 2 + 14} ${r1.y + r1.h + 32} L ${r6.x + r6.w / 2} ${r6.y + r6.h + 32} L ${r6.x + r6.w / 2} ${r6.y + r6.h}`,
+      type: 'required',
+      scope: 'required',
+      particles: 1,
+      label: '15-DAY ROLLING AVERAGES',
+      labelAt: { x: (r1.x + r1.w + r6.x) / 2, y: r6.y + r6.h + 46 },
+    });
+    c.push({
+      d: `M ${r2.x + r2.w / 2 + 40} ${r2.y + r2.h} L ${r2.x + r2.w / 2 + 40} ${r2.y + r2.h + 16} L ${r6.x + r6.w / 2 - 16} ${r6.y + r6.h + 16} L ${r6.x + r6.w / 2 - 16} ${r6.y + r6.h}`,
+      type: 'required',
+      scope: 'required',
+      particles: 1,
+    });
+  }
 
   // Band 06 -> 07
   // dashboards (5) -> users 0..2 (orange)
   c.push(vc(5, 5, 6, 0, 'required', 2, { dx1: -20, lane: 0 }));
-  c.push(vc(5, 5, 6, 1, 'required', 2));
-  c.push(vc(5, 5, 6, 2, 'required', 2, { dx1: 20 }));
+  c.push(vc(5, 5, 6, 1, 'required', 2, { lane: 1 }));
+  c.push(vc(5, 5, 6, 2, 'required', 2, { dx1: 20, lane: 2 }));
   // alert engine (3) -> maintainer app (0), red
-  c.push(vc(5, 3, 6, 0, 'alert', 3, { dx2: 18, lane: 1 }));
+  c.push(vc(5, 3, 6, 0, 'alert', 3, { dx2: 18, lane: 3 }));
   // required integrations: maintenance, common dashboard and Railway Cloud packet copy
-  c.push(vc(5, 5, 6, 3, 'required', 2, { dx1: 34 }));
-  c.push(vc(5, 5, 6, 4, 'required', 2, { dx1: 48 }));
-  c.push(vc(5, 6, 6, 5, 'required', 1));
+  c.push(vc(5, 5, 6, 3, 'required', 2, { dx1: 34, lane: 4 }));
+  c.push(vc(5, 5, 6, 4, 'required', 2, { dx1: 48, lane: 5 }));
+  c.push(vc(5, 6, 6, 5, 'required', 1, { lane: 6 }));
 
+  if (orientation === 'portrait') dockPortraitLabels(c);
   return c;
 }
 
