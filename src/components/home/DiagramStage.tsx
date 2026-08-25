@@ -115,17 +115,17 @@ export default function DiagramStage() {
     setZoom(scale);
   }, [setZoom, setClampedView]);
 
-  const downloadSvg = useCallback(async () => {
+  const downloadSvg = useCallback(async (orientation: 'landscape' | 'portrait' = 'landscape') => {
     try {
       const iconDataUris = iconDataRef.current ?? (await loadIconDataUris());
       iconDataRef.current = iconDataUris;
       setIconError(null);
-      const svg = exportSvg(mode, iconDataUris);
+      const svg = exportSvg(mode, iconDataUris, orientation);
       const blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'rdpms-lld.svg';
+      a.download = orientation === 'portrait' ? 'rdpms-lld-vertical.svg' : 'rdpms-lld.svg';
       a.click();
       URL.revokeObjectURL(url);
     } catch (error) {

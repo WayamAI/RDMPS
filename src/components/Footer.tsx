@@ -65,14 +65,24 @@ export default function Footer() {
               </li>
             ))}
             {controlsReady && (
-              <li>
-                <button
-                  onClick={downloadSvg}
-                  className="flex items-center gap-1.5 text-text-tertiary transition-colors hover:text-text-primary cursor-pointer"
-                >
-                  <Download className="h-3.5 w-3.5" /> Download SVG
-                </button>
-              </li>
+              <>
+                <li>
+                  <button
+                    onClick={() => downloadSvg('landscape')}
+                    className="flex items-center gap-1.5 text-text-tertiary transition-colors hover:text-text-primary cursor-pointer"
+                  >
+                    <Download className="h-3.5 w-3.5" /> Download SVG
+                  </button>
+                </li>
+                <li>
+                  <button
+                    onClick={() => downloadSvg('portrait')}
+                    className="flex items-center gap-1.5 text-text-tertiary transition-colors hover:text-text-primary cursor-pointer"
+                  >
+                    <Download className="h-3.5 w-3.5" /> Vertical SVG
+                  </button>
+                </li>
+              </>
             )}
           </ul>
         </div>

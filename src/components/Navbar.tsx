@@ -66,8 +66,8 @@ export default function Navbar() {
   }, []);
 
 
-  const handleDownload = () => {
-    downloadSvg();
+  const handleDownload = (orientation: 'landscape' | 'portrait' = 'landscape') => {
+    downloadSvg(orientation);
     setSaved(true);
     window.setTimeout(() => setSaved(false), 1800);
   };
@@ -145,16 +145,27 @@ export default function Navbar() {
           )}
 
           {isHome && (
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.97 }}
-              onClick={handleDownload}
-              disabled={!controlsReady}
-              className="hidden h-8 items-center gap-2 rounded-lg bg-flow-required px-3 text-[12px] font-semibold text-white transition-colors hover:bg-[#c24a0a] disabled:opacity-50 sm:flex cursor-pointer"
-            >
-              {saved ? <Check className="h-4 w-4 text-white" /> : <Download className="h-4 w-4" />}
-              <span>{saved ? 'SVG saved' : 'Download SVG'}</span>
-            </motion.button>
+            <div className="hidden items-center gap-1 sm:flex">
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={() => handleDownload('landscape')}
+                disabled={!controlsReady}
+                className="flex h-8 items-center gap-2 rounded-lg bg-flow-required px-3 text-[12px] font-semibold text-white transition-colors hover:bg-[#c24a0a] disabled:opacity-50 cursor-pointer"
+              >
+                {saved ? <Check className="h-4 w-4 text-white" /> : <Download className="h-4 w-4" />}
+                <span>{saved ? 'SVG saved' : 'Download SVG'}</span>
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={() => handleDownload('portrait')}
+                disabled={!controlsReady}
+                className="flex h-8 items-center rounded-lg border border-stroke-default bg-container px-2.5 text-[12px] font-semibold text-text-secondary transition-colors hover:border-flow-required-soft hover:text-text-primary disabled:opacity-50 cursor-pointer"
+              >
+                Vertical
+              </motion.button>
+            </div>
           )}
 
           {/* Mobile menu button */}
@@ -217,12 +228,19 @@ export default function Navbar() {
                     </button>
                   </div>
                   <button
-                    onClick={handleDownload}
+                    onClick={() => handleDownload('landscape')}
                     disabled={!controlsReady}
                     className="flex h-9 items-center justify-center gap-2 rounded-lg bg-flow-required px-3.5 text-[13px] font-semibold text-white disabled:opacity-50"
                   >
                     {saved ? <Check className="h-4 w-4 text-white" /> : <Download className="h-4 w-4" />}
                     <span>{saved ? 'SVG saved' : 'Download SVG'}</span>
+                  </button>
+                  <button
+                    onClick={() => handleDownload('portrait')}
+                    disabled={!controlsReady}
+                    className="flex h-9 items-center justify-center rounded-lg border border-stroke-default bg-container px-3.5 text-[13px] font-semibold text-text-secondary disabled:opacity-50"
+                  >
+                    Vertical SVG
                   </button>
                 </div>
               )}

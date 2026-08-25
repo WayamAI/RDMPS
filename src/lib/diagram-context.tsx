@@ -7,7 +7,7 @@ export interface DiagramControls {
   zoomIn: () => void;
   zoomOut: () => void;
   fit: () => void;
-  downloadSvg: () => void | Promise<void>;
+  downloadSvg: (orientation?: 'landscape' | 'portrait') => void | Promise<void>;
 }
 
 interface DiagramState {
@@ -21,7 +21,7 @@ interface DiagramState {
   zoomIn: () => void;
   zoomOut: () => void;
   fit: () => void;
-  downloadSvg: () => void | Promise<void>;
+  downloadSvg: (orientation?: 'landscape' | 'portrait') => void | Promise<void>;
   controlsReady: boolean;
 }
 
@@ -41,7 +41,10 @@ export function DiagramProvider({ children }: { children: ReactNode }) {
   const zoomIn = useCallback(() => controlsRef.current?.zoomIn(), []);
   const zoomOut = useCallback(() => controlsRef.current?.zoomOut(), []);
   const fit = useCallback(() => controlsRef.current?.fit(), []);
-  const downloadSvg = useCallback(() => controlsRef.current?.downloadSvg(), []);
+  const downloadSvg = useCallback(
+    (orientation: 'landscape' | 'portrait' = 'landscape') => controlsRef.current?.downloadSvg(orientation),
+    [],
+  );
 
   const value = useMemo<DiagramState>(
     () => ({

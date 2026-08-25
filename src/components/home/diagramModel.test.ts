@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { CAPABILITY_GROUPS } from '@/content/requirements';
-import { BANDS, ICON_IMAGES, buildConnectors, exportSvg, loadIconDataUris } from './diagramModel';
+import { BANDS, BOARD_W, ICON_IMAGES, buildConnectors, cardRect, exportSvg, loadIconDataUris } from './diagramModel';
 
 const cards = BANDS.flatMap((band) => band.cards);
 const modelCopy = () =>
@@ -193,5 +193,30 @@ describe('LLD capability model', () => {
     expect(svg).toContain('FUTURE-COMPATIBLE');
     expect(svg).toContain('connector-draw');
     expect(svg).toContain('<animateMotion');
+  });
+
+  it('exports a compact side-by-side layers SVG', () => {
+    const field0 = cardRect(0, 0, 'portrait');
+    const field1 = cardRect(0, 1, 'portrait');
+    const field2 = cardRect(0, 2, 'portrait');
+    const iot0 = cardRect(1, 0, 'portrait');
+
+    expect(field1.x).toBeGreaterThan(field0.x);
+    expect(field1.y).toBe(field0.y);
+    expect(field2.x).toBe(field0.x);
+    expect(field2.y).toBeGreaterThan(field0.y);
+    expect(iot0.x).toBeGreaterThan(field1.x);
+
+    const svg = exportSvg('all', {}, 'portrait');
+    const width = Number(svg.match(/width="(\d+(?:\.\d+)?)"/)?.[1]);
+    const height = Number(svg.match(/height="(\d+(?:\.\d+)?)"/)?.[1]);
+
+    expect(width).toBeGreaterThan(BOARD_W);
+    expect(height).toBeLessThan(1100);
+    cards.forEach(({ title }) => {
+      expect(svg).toContain(title.split(/\s+/)[0]);
+    });
+    expect(svg).toContain('LEGEND');
+    expect(svg).toContain('CROSS-CUTTING CONCERNS');
   });
 });
