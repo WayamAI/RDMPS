@@ -59,12 +59,12 @@ Substitute `{ID}` with the id in the first column.
 ```
 You are generating an icon sprite for a railway signalling telemetry dashboard.
 
-[paste the house style block from §1]
+[paste the house style block from Requirement 1]
 
 Produce all 21 symbols in one file, in this order, wrapped in:
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none"> … </svg>
 
-Then, for each row of the table in §2, emit one <symbol> using the given id and prompt.
+Then, for each row of the table in Requirement 2, emit one <symbol> using the given id and prompt.
 Do not restate the prompts in the output. Do not add a legend or preview markup.
 ```
 

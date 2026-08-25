@@ -1,13 +1,13 @@
 import { createContext, useCallback, useContext, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 
-export type FlowMode = 'full' | 'poc';
+export type FlowMode = 'all' | 'required';
 
 export interface DiagramControls {
   zoomIn: () => void;
   zoomOut: () => void;
   fit: () => void;
-  downloadSvg: () => void;
+  downloadSvg: () => void | Promise<void>;
 }
 
 interface DiagramState {
@@ -21,14 +21,14 @@ interface DiagramState {
   zoomIn: () => void;
   zoomOut: () => void;
   fit: () => void;
-  downloadSvg: () => void;
+  downloadSvg: () => void | Promise<void>;
   controlsReady: boolean;
 }
 
 const DiagramContext = createContext<DiagramState | null>(null);
 
 export function DiagramProvider({ children }: { children: ReactNode }) {
-  const [mode, setMode] = useState<FlowMode>('full');
+  const [mode, setMode] = useState<FlowMode>('all');
   const [zoom, setZoom] = useState(0.88);
   const [controlsReady, setControlsReady] = useState(false);
   const controlsRef = useRef<DiagramControls | null>(null);

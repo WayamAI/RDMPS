@@ -110,6 +110,19 @@
   }
 }
 
+/* Mermaid diagrams — keep SVG readable on light paper surfaces */
+.mermaid-host svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+.mermaid-host .nodeLabel,
+.mermaid-host .edgeLabel,
+.mermaid-host .label {
+  font-family: Geist, ui-sans-serif, system-ui, sans-serif;
+}
+
 /* ---- flow particles (SVG animateMotion handles path travel; this guards perf) ---- */
 @media (prefers-reduced-motion: reduce) {
 
@@ -225,18 +238,18 @@ body[data-tab-hidden="true"] .flow-particle {
 }
 
 /* ---- flow toggle transitions ---- */
-.flow-scope-full {
+.flow-scope-nonrequired {
   transition:
     opacity 0.4s cubic-bezier(0.22, 1, 0.36, 1),
     filter 0.4s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-[data-flow-mode="poc"] .flow-scope-full {
-  opacity: 0.22;
+[data-flow-mode="required"] .flow-scope-nonrequired {
+  opacity: 0.18;
   filter: grayscale(60%);
 }
 
-[data-flow-mode="poc"] .flow-scope-full .flow-particle {
+[data-flow-mode="required"] .flow-scope-nonrequired .flow-particle {
   opacity: 0;
   transition: opacity 0.3s;
 }
@@ -245,7 +258,7 @@ body[data-tab-hidden="true"] .flow-particle {
   transition: background-color 0.4s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-[data-flow-mode="poc"] .band-tint-poc {
+[data-flow-mode="required"] .band-tint-required {
   background-color: #FFF1E3;
 }
 

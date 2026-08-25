@@ -25,7 +25,7 @@ function PhaseCard({
       onMouseLeave={() => onHover(null)}
       className={`relative scroll-mt-28 rounded-2xl border p-6 transition-all duration-300 sm:p-8 ${
         active
-          ? 'border-flow-poc bg-container shadow-[0_12px_40px_rgba(234,88,12,0.15)]'
+          ? 'border-flow-required bg-container shadow-[0_12px_40px_rgba(234,88,12,0.15)]'
           : 'border-stroke-default bg-container hover:border-stroke-active'
       }`}
     >
@@ -39,14 +39,14 @@ function PhaseCard({
       >
         <span
           className={`inline-block h-3.5 w-3.5 rotate-45 rounded-[3px] border-2 ${
-            active ? 'border-flow-poc bg-flow-poc' : 'border-flow-poc bg-raised'
+            active ? 'border-flow-required bg-flow-required' : 'border-flow-required bg-raised'
           }`}
         />
       </motion.span>
 
       <div className="flex flex-wrap items-center gap-3">
         <span
-          className={`${FONT_MONO} inline-flex h-8 min-w-8 items-center justify-center rounded-md bg-flow-poc px-2 text-[13px] font-bold text-white`}
+          className={`${FONT_MONO} inline-flex h-8 min-w-8 items-center justify-center rounded-md bg-flow-required px-2 text-[13px] font-bold text-white`}
         >
           {phase.pill}
         </span>
@@ -71,9 +71,9 @@ function PhaseCard({
         ))}
       </ul>
 
-      <div className="mt-6 flex items-center gap-3 rounded-xl border border-flow-poc/30 bg-flow-poc/10 px-4 py-3">
-        <Flag size={15} className="shrink-0 text-flow-poc" />
-        <p className={`${FONT_MONO} text-[11px] uppercase tracking-[0.1em] text-flow-poc font-semibold`}>
+      <div className="mt-6 flex items-center gap-3 rounded-xl border border-flow-required/30 bg-flow-required/10 px-4 py-3">
+        <Flag size={15} className="shrink-0 text-flow-required" />
+        <p className={`${FONT_MONO} text-[11px] uppercase tracking-[0.1em] text-flow-required font-semibold`}>
           Gate · {phase.gate}
         </p>
       </div>
@@ -95,7 +95,7 @@ export default function PhaseCards({
   return (
     <section className="mx-auto w-full max-w-[1200px] px-6 pb-24">
       <div className="mb-12">
-        <p className={`${FONT_MONO} text-[11px] uppercase tracking-[0.14em] text-flow-poc`}>
+        <p className={`${FONT_MONO} text-[11px] uppercase tracking-[0.14em] text-flow-required`}>
           Phase plan · P0–P5
         </p>
         <h2 className={`${FONT_DISPLAY} mt-3 text-[26px] font-bold tracking-tight text-text-primary sm:text-[32px]`}>
@@ -108,7 +108,7 @@ export default function PhaseCards({
         <div className="absolute bottom-4 left-0 top-4 w-px bg-stroke-default" />
         <motion.div
           style={{ scaleY: spineScale }}
-          className="absolute bottom-4 left-0 top-4 w-px origin-top bg-flow-poc"
+          className="absolute bottom-4 left-0 top-4 w-px origin-top bg-flow-required"
         />
 
         <div className="flex flex-col gap-6 pl-0 lg:pl-10">

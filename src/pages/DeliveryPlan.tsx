@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import PhaseCards from '@/components/poc-roadmap/PhaseCards'
-import RoadmapCrossLinks from '@/components/poc-roadmap/RoadmapCrossLinks'
-import ScopeContract from '@/components/poc-roadmap/ScopeContract'
-import TimelineFigure from '@/components/poc-roadmap/TimelineFigure'
+import PhaseCards from '@/components/delivery-plan/PhaseCards'
+import DeliveryPlanLinks from '@/components/delivery-plan/DeliveryPlanLinks'
+import ScopeContract from '@/components/delivery-plan/ScopeContract'
+import TimelineFigure from '@/components/delivery-plan/TimelineFigure'
 import { CharRise, EASE, Eyebrow, FONT_BODY, SpecChip } from '@/components/field-assets/shared'
 
 const STAT_CHIPS = ['6 phases', '5 phase gates', '≥99% availability target', '>60% alert KPIs @ 6 months']
@@ -15,7 +15,7 @@ function Hero() {
       style={{ backgroundImage: "url('/hero-texture.svg')", backgroundRepeat: 'repeat' }}
     >
       <div className="mx-auto w-full max-w-[1200px] px-6 pb-16 pt-24 lg:pt-32">
-        <Eyebrow>POC Pilot · M1–M18</Eyebrow>
+        <Eyebrow>Delivery Plan · M1–M18</Eyebrow>
         <CharRise
           text="Eighteen months, six phases, one station."
           className="mt-5 max-w-[900px] text-[40px] leading-[1.05] sm:text-[48px]"
@@ -42,7 +42,7 @@ function Hero() {
   )
 }
 
-export default function PocRoadmap() {
+export default function DeliveryPlan() {
   const [activePhase, setActivePhase] = useState<string | null>(null)
 
   return (
@@ -51,7 +51,7 @@ export default function PocRoadmap() {
       <TimelineFigure activePhase={activePhase} onPhaseHover={setActivePhase} />
       <PhaseCards activePhase={activePhase} onPhaseHover={setActivePhase} />
       <ScopeContract />
-      <RoadmapCrossLinks />
+      <DeliveryPlanLinks />
     </div>
   )
 }

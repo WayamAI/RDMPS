@@ -9,7 +9,7 @@ const CHIPS = [
   { id: 'dd-alerts', label: '03 Alerts' },
   { id: 'dd-hard-logic', label: '04 Hard Logic' },
   { id: 'dd-security', label: '05 Security' },
-  { id: 'dd-scope', label: '06 POC Scope' },
+  { id: 'dd-scope', label: '06 Required system Scope' },
 ];
 
 const EASE = [0.22, 1, 0.36, 1] as [number, number, number, number];
@@ -57,7 +57,7 @@ export default function DeepDiveDivider() {
       </div>
 
       <div className="relative mx-auto max-w-[1200px] px-6 py-24">
-        <div className="font-mono text-xs uppercase tracking-eyebrow text-flow-poc">Technical details</div>
+        <div className="font-mono text-xs uppercase tracking-eyebrow text-flow-required">Technical details</div>
         <h2 className="mt-4 font-display text-[40px] font-bold leading-tight tracking-tight-display text-text-primary">
           {title.split('').map((ch, i) => (
             <motion.span
@@ -73,7 +73,7 @@ export default function DeepDiveDivider() {
           ))}
         </h2>
         <p className="mt-4 max-w-2xl text-[15px] text-text-secondary">
-          Identifiers · packets · alert lifecycle · hard logic · security · pilot scope  the engineering detail behind
+          Identifiers · packets · alert lifecycle · hard logic · security · required-system scope—the engineering detail behind
           every band.
         </p>
 
@@ -92,7 +92,7 @@ export default function DeepDiveDivider() {
               onClick={() => scrollToId(c.id)}
               className={cn(
                 'shrink-0 whitespace-nowrap rounded-full px-3.5 py-1.5 font-mono text-[11px] transition-colors cursor-pointer',
-                active === c.id ? 'bg-flow-poc text-white' : 'bg-raised text-text-tertiary hover:bg-raised-2 hover:text-flow-poc',
+                active === c.id ? 'bg-flow-required text-white' : 'bg-raised text-text-tertiary hover:bg-raised-2 hover:text-flow-required',
               )}
             >
               {c.label}

@@ -17,7 +17,7 @@ const COLS: { icon: LucideIcon; title: string; body: string }[] = [
   {
     icon: Gauge,
     title: 'Metrology',
-    body: 'IEC 60688 Class 1 transducers · 2% accuracy · drift <2% per year with calibration evidence per §16.',
+    body: 'IEC 60688 Class 1 transducers · 2% accuracy · drift <2% per year with calibration evidence per Requirement 16.',
   },
 ]
 
@@ -51,7 +51,7 @@ function TechColumn({ icon: Icon, title, body, index }: { icon: LucideIcon; titl
             transition={{ duration: 0.5, ease: 'easeInOut', delay: index * 0.12 + 0.2 }}
           />
         </motion.svg>
-        <Icon size={26} className="text-flow-poc" strokeWidth={1.5} />
+        <Icon size={26} className="text-flow-required" strokeWidth={1.5} />
       </div>
       <h3 className={`${FONT_DISPLAY} text-[18px] font-semibold text-text-primary`}>{title}</h3>
       <p className={`${FONT_BODY} text-[14px] leading-relaxed text-text-secondary`}>{body}</p>
@@ -69,7 +69,7 @@ export default function SensorTechStrip() {
         transition={{ duration: 0.8, ease: EASE }}
         className="mx-auto w-full max-w-[1200px] px-6 py-16 md:py-24"
       >
-        <p className={`${FONT_MONO} text-[11px] uppercase tracking-[0.14em] text-flow-poc`}>
+        <p className={`${FONT_MONO} text-[11px] uppercase tracking-[0.14em] text-flow-required`}>
           Sensor technology · why it is safe to retrofit
         </p>
         <h2

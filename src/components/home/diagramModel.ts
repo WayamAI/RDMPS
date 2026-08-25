@@ -1,3 +1,6 @@
+import { CAPABILITY_GROUPS } from '@/content/requirements';
+import type { RequirementId, RequirementStatus } from '@/content/requirements';
+
 // Deterministic geometry model for the 7-band LLD diagram board with square blocks.
 // All coordinates are in board-inner space (origin = top-left of the board padding box).
 
@@ -21,7 +24,7 @@ export const BOARD_W = BOARD_PAD * 2 + BAND_W + RAIL_GAP + RAIL_W; // 1528
 export const BANDS_H = TITLE_H + 7 * BAND_H + 6 * BAND_GAP; // 108 + 1652 + 312 = 2072
 export const BOARD_H = BOARD_PAD + BANDS_H + 32; // 2052
 
-/** Maps card icon ids to the 3D rendered artwork in public/icons. */
+/** Maps every diagram icon to its locally stored 3D JPEG in public/icons. */
 export const ICON_IMAGES: Record<string, string> = {
   'i-bell': '/icons/3D_alarm_bell_icon_202608211337.jpeg',
   'i-file-json': '/icons/3D_data_document_icon_202608211337.jpeg',
@@ -46,15 +49,15 @@ export const ICON_IMAGES: Record<string, string> = {
   'i-users': '/icons/Two_people_3D_icon_202608211337.jpeg',
 };
 
-export type FlowType = 'poc' | 'full' | 'alert' | 'dashed';
-export type Scope = 'poc' | 'full';
+export type FlowType = RequirementStatus | 'alert';
+export type Scope = RequirementStatus;
 
 export interface CardSpec {
   title: string;
   sub: string;
   icon: string;
-  scope: Scope;
-  dashed?: boolean; // dashed-outline future card
+  status: RequirementStatus;
+  requirementIds: readonly [RequirementId, ...RequirementId[]];
   accent?: 'amber' | 'red' | 'blue';
   badge?: string;
   popoverImg?: string;
@@ -64,101 +67,118 @@ export interface CardSpec {
 export interface BandSpec {
   num: string;
   title: string;
-  pocTint?: boolean;
+  requiredTint?: boolean;
   cards: CardSpec[];
+}
+
+const REQUIREMENT_STATUS = new Map(
+  CAPABILITY_GROUPS.flatMap((group) =>
+    group.requirements.map((requirement) => [requirement.id, requirement.status] as const),
+  ),
+);
+
+function traced(
+  requirementIds: readonly [RequirementId, ...RequirementId[]],
+  card: Omit<CardSpec, 'status' | 'requirementIds'>,
+): CardSpec {
+  const statuses = new Set(requirementIds.map((id) => REQUIREMENT_STATUS.get(id)));
+  if (statuses.has(undefined) || statuses.size !== 1) {
+    throw new Error(`Invalid LLD requirement trace: ${requirementIds.join(', ')}`);
+  }
+  return { ...card, status: [...statuses][0] as RequirementStatus, requirementIds };
 }
 
 export const BANDS: BandSpec[] = [
   {
     num: '01',
-    title: 'FIELD ASSETS & SENSORS · RDSO ANNEXURE C SET',
-    pocTint: true,
+    title: 'FIELD ASSETS · SURVEY-DRIVEN REQUIRED COVERAGE',
+    requiredTint: true,
     cards: [
-      { title: 'Point Machines', sub: 'EOP · ≥8 sensors\n20 ms sample bursts', icon: 'i-point', scope: 'poc' },
-      { title: 'DC Track Circuits', sub: 'DCT · 9 sensors\n±2% drift tracking', icon: 'i-track', scope: 'poc' },
-      { title: 'Signals (Main/Call/Shunt)', sub: 'LED/LES/LEC/LER\n3+2 / 3 / 6 sensors', icon: 'i-signal', scope: 'poc' },
-      { title: 'IPS Power Supply', sub: 'Asset 50\nVoltage/current/temp', icon: 'i-power', scope: 'poc' },
-      { title: 'ELB / SPD / ELD', sub: 'SPD 51 · ELD 60\nSurge & leakage', icon: 'i-shield-bolt', scope: 'poc' },
-      { title: 'Equipment Rooms', sub: 'RR·IPS·BATT·GEN\nF0–F6 environment', icon: 'i-room', scope: 'poc' },
-      { title: 'Non-Intrusive Sensors', sub: 'Hall split-core\n≥2.5 kV isolation', icon: 'i-sensor', scope: 'poc' },
+      traced(['field-asset-coverage'], { title: 'Point machines', sub: 'Point machines\nlifting barriers', icon: 'i-point' }),
+      traced(['field-asset-coverage'], { title: 'Track circuits', sub: 'Track circuits\naxle counters', icon: 'i-track' }),
+      traced(['field-asset-coverage'], { title: 'Signals', sub: 'Main · calling-on\nshunt signals', icon: 'i-signal' }),
+      traced(['station-interfaces'], { title: 'Data loggers / IPS', sub: 'Existing station systems\nincluded by survey', icon: 'i-power' }),
+      traced(['equipment-room-monitoring'], { title: 'Relay / equipment rooms', sub: 'Power · environment\nroom conditions', icon: 'i-room' }),
+      traced(['purchaser-selected-assets'], { title: 'Additional assets', sub: 'Purchaser-selected additional assets\nfrom broad survey', icon: 'i-shield-bolt' }),
+      traced(['current-sensing'], { title: 'Non-intrusive / isolated sensing', sub: 'No signalling-circuit\ninterference', icon: 'i-sensor' }),
     ],
   },
   {
     num: '02',
-    title: 'IoT DATA ACQUISITION · ≤20 MS SCAN',
-    pocTint: true,
+    title: 'IoT ACQUISITION · EVENT CAPTURE, BUFFERING & HEALTH',
+    requiredTint: true,
     cards: [
-      { title: 'Point IoT Node', sub: 'param_f 5 s continuous\nparam_e 20 ms burst', icon: 'i-point', scope: 'poc' },
-      { title: 'Track Circuit IoT', sub: '±2% change-based\nsignal sampling', icon: 'i-track', scope: 'poc' },
-      { title: 'Signal IoT Node', sub: 'LED current monitor\nRelay PF contacts', icon: 'i-signal', scope: 'poc' },
-      { title: 'IPS/Room IoT Node', sub: 'F0–F6 sensors\n24V DC +20%/−30%', icon: 'i-power', scope: 'poc' },
-      { title: 'Edge-of-Network IoT', sub: 'LC Gate / IBH\nLoRa / Zigbee full', icon: 'i-antenna', scope: 'full', accent: 'blue' },
+      traced(['event-sampling'], { title: 'Event-based capture', sub: '≤20 ms during point-machine / lifting-barrier operation\nnot universal continuous sampling', icon: 'i-point' }),
+      traced(['iot-buffer'], { title: 'IoT event retention', sub: '≥10 lakh event FIFO\npower / link outage resilience', icon: 'i-db' }),
+      traced(['asset-telemetry'], { title: 'Asset telemetry', sub: 'Analogue / digital events\nsurvey-defined channels', icon: 'i-signal' }),
+      traced(['iot-health', 'field-power'], { title: 'IoT health', sub: 'Device status · resources\n24V DC tolerance', icon: 'i-gauge' }),
+      traced(['local-media'], { title: 'Field media', sub: 'Wired / optical / wireless\nselected for site conditions', icon: 'i-antenna', accent: 'blue' }),
     ],
   },
   {
     num: '03',
-    title: 'STATION GATEWAY · EDGE',
-    pocTint: true,
+    title: 'STATION GATEWAY · CONVERSION, FIFO & CONTROL',
+    requiredTint: true,
     cards: [
-      {
-        title: 'Aggregator',
-        sub: 'RS485 / Modbus RTU\nStation datalogger',
+      traced(['station-interfaces'], {
+        title: 'Protocol conversion',
+        sub: 'Data Logger / IPS protocol conversion\nadditional interfaces as required',
         icon: 'i-merge',
-        scope: 'poc',
         popoverImg: '/photo-edge-gateway.jpg',
-        popoverCaption: 'DIN-rail edge gateway  relay-room cabinet',
-      },
-      { title: 'Store & Forward', sub: '≥50 lakh events\n≤70% HW utilisation', icon: 'i-db', scope: 'poc' },
-      { title: 'GPS / IRNSS Clock', sub: 'GPS master clock\nµs-grade sync', icon: 'i-clock', scope: 'poc' },
-      { title: 'MQTT Client', sub: 'mTLS · QoS 1\nTopic pub/sub queue', icon: 'i-gateway', scope: 'poc' },
+        popoverCaption: 'DIN-rail edge gateway · relay-room cabinet',
+      }),
+      traced(['gateway-buffer'], { title: 'Gateway retention', sub: '≥50 lakh event FIFO\noutage-safe store / forward', icon: 'i-db' }),
+      traced(['gateway-audit', 'gateway-time-sync'], { title: 'Gateway assurance', sub: 'health / audit\nGPS / IRNSS fallback', icon: 'i-clock' }),
+      traced(['publish-subscribe'], { title: 'Secure publisher', sub: 'Publish-subscribe client\nqueued station uplink', icon: 'i-gateway' }),
     ],
   },
   {
     num: '04',
-    title: 'NETWORK & TRANSPORT',
-    pocTint: true,
+    title: 'NETWORK · MANDATORY PARALLEL STATION UPLINKS',
+    requiredTint: true,
     cards: [
-      { title: 'RailTel OFC / IP-MPLS', sub: 'Primary path\n≥10 Mbps dedicated', icon: 'i-antenna', scope: 'poc' },
-      { title: '4G / 5G Backup', sub: 'Failover path\n≥10 Mbps dual SIM', icon: 'i-sensor', scope: 'poc' },
-      { title: 'Power & Earthing', sub: '24V DC from IPS N+1\nRDSO/SPN/197 earth', icon: 'i-power', scope: 'poc' },
-      { title: 'Future CCSP Network', sub: 'C-DOT CCSP standard\noneM2M migration', icon: 'i-cloud', scope: 'full', dashed: true },
+      traced(['station-uplinks'], { title: 'Primary Railway path', sub: 'Railway optical / IP primary\nstation-to-platform', icon: 'i-antenna' }),
+      traced(['station-uplinks'], { title: 'Parallel mobile path', sub: 'parallel LTE / 4G / 5G · ≥10 Mbps\nmandatory redundancy', icon: 'i-sensor' }),
+      traced(['system-health'], { title: 'Network health', sub: 'Device + network health\npath and link visibility', icon: 'i-gauge' }),
+      traced(['future-platform'], { title: 'Shared-service migration', sub: 'Future-compatible C-DOT platform\noneM2M over MQTT', icon: 'i-cloud' }),
     ],
   },
   {
     num: '05',
-    title: 'ISP · MQTT MIDDLEWARE',
-    pocTint: true,
+    title: 'SECURE PUBLISH-SUBSCRIBE MIDDLEWARE',
+    requiredTint: true,
     cards: [
-      { title: 'MQTT Broker', sub: 'Port 8883 mTLS\nRequire client cert', icon: 'i-broker', scope: 'poc' },
-      { title: 'Topic AuthZ & ACL', sub: '{role}/{snd}/{rcv}\nFull audit ledger', icon: 'i-file-json', scope: 'poc' },
-      { title: 'Discovery Registry', sub: 'TIME_SYNC 7d\nINFO 30d · IMAGE 7d', icon: 'i-db', scope: 'poc' },
-      { title: 'Per-Vendor PKI', sub: '4096-bit CA cert\nCRL / OCSP verify', icon: 'i-shield', scope: 'poc' },
+      traced(['publish-subscribe', 'middleware-security'], { title: 'Publish-subscribe broker', sub: 'Secure message routing\nbroker settings evidence-backed', icon: 'i-broker' }),
+      traced(['certificate-status'], { title: 'Certificate trust', sub: 'certificate authentication / revocation\nCRL or OCSP checks', icon: 'i-shield' }),
+      traced(['middleware-access-audit'], { title: 'Authorization & audit', sub: 'Topic access control\nsecurity event evidence', icon: 'i-file-json' }),
+      traced(['middleware-operations'], { title: 'Service operations', sub: 'Acknowledgment · retry · logging\nauditable transactions', icon: 'i-gauge' }),
     ],
   },
   {
     num: '06',
-    title: 'RDPMS APPLICATION · CLOUD',
-    pocTint: true,
+    title: 'RDPMS APPLICATION · DATA, LOGIC & MODEL LIFECYCLE',
+    requiredTint: true,
     cards: [
-      { title: 'Ingestion Engine', sub: 'Schema validation\nTwo-speed data store', icon: 'i-file-json', scope: 'poc' },
-      { title: 'Hard-Logic Engine', sub: '65 pred + 77 fail\nAnnexure C logic', icon: 'i-gauge', scope: 'poc', accent: 'amber' },
-      { title: 'AI / ML Analytics', sub: 'Staged cold-start\nISO/IEC 5338 model', icon: 'i-gauge', scope: 'poc' },
-      { title: 'Alert Engine', sub: '1-alert-per-asset\n≤1 min SLA latency', icon: 'i-bell', scope: 'poc', accent: 'red' },
-      { title: 'Feedback Loop', sub: 'T/PT/F/M tagging\nJE/SSE arbitration', icon: 'i-users', scope: 'poc' },
-      { title: 'Web Dashboards', sub: 'Annexure E & G\nWeb + Mobile UI', icon: 'i-dashboard', scope: 'poc' },
-      { title: 'Cloud Data Lake', sub: '≥2-yr time series\nRailway Cloud §11.12', icon: 'i-db', scope: 'poc' },
+      traced(['application-processing'], { title: 'Ingestion / logic', sub: 'Schema-aware ingestion\nrules and processing', icon: 'i-file-json' }),
+      traced(['application-processing'], { title: 'Diagnostic logic', sub: 'Evidence-backed rules\nfailure / prediction outcomes', icon: 'i-gauge', accent: 'amber' }),
+      traced(['model-lifecycle'], { title: 'Model lifecycle', sub: 'Training · validation · deployment\nfeedback-led improvement', icon: 'i-gauge' }),
+      traced(['application-alerts', 'alert-performance'], { title: 'Alert lifecycle', sub: 'Create · route · acknowledge\nperformance measured after commissioning', icon: 'i-bell', accent: 'red' }),
+      traced(['model-lifecycle'], { title: 'Operational feedback', sub: 'Maintainer outcome labels\nreview and governance', icon: 'i-users' }),
+      traced(['data-retention'], { title: 'Operational history', sub: 'two-year storage\nserver data retention', icon: 'i-db' }),
+      traced(['railway-cloud'], { title: 'Railway Cloud copies', sub: 'Railway Cloud image + parameter copies\nmanagement-selected route', icon: 'i-cloud' }),
     ],
   },
   {
     num: '07',
-    title: 'USERS & INTEGRATIONS',
+    title: 'USERS & REQUIRED RAILWAY INTEGRATIONS',
+    requiredTint: true,
     cards: [
-      { title: 'Maintainer App', sub: 'Field Ack & reset\nAnnexure G workflow', icon: 'i-phone', scope: 'poc', accent: 'red' },
-      { title: 'JE / SSE Dashboard', sub: 'Station console\nAnnexure E views', icon: 'i-dashboard', scope: 'poc' },
-      { title: 'ASTE / DSTE Console', sub: 'Divisional tier\nEscalation tracker', icon: 'i-users', scope: 'poc' },
-      { title: 'SMMS (CRIS)', sub: 'Maintenance API\nJob ticket sync', icon: 'i-db', scope: 'full', accent: 'blue' },
-      { title: 'Railway Dashboard', sub: 'HQ visibility\n5 Annexure F APIs', icon: 'i-dashboard', scope: 'full', accent: 'blue' },
-      { title: 'Railway Cloud Copy', sub: '§11.12 replication\nNational data sync', icon: 'i-cloud', scope: 'full', dashed: true },
+      traced(['application-users'], { title: 'Web users', sub: 'web / mobile / management users\nmaintainer workflows', icon: 'i-dashboard' }),
+      traced(['application-users'], { title: 'Mobile users', sub: 'Field acknowledgement\noperational access', icon: 'i-phone', accent: 'red' }),
+      traced(['application-users'], { title: 'Management users', sub: 'Station · division · HQ\nrole-appropriate views', icon: 'i-users' }),
+      traced(['maintenance-integration'], { title: 'Maintenance integration', sub: 'maintenance APIs\nasset and parameter exchange', icon: 'i-db' }),
+      traced(['dashboard-integration'], { title: 'Management integration', sub: 'common dashboard APIs\nalert · telemetry · performance', icon: 'i-dashboard' }),
+      traced(['railway-cloud'], { title: 'Cloud packet delivery', sub: 'Image + parameter packets\nrequired Railway Cloud copy', icon: 'i-cloud' }),
     ],
   },
 ];
@@ -301,6 +321,7 @@ export interface Connector {
   label?: string;
   labelAt?: { x: number; y: number };
   particles: number;
+  dashed?: boolean;
   /** merge-bus stubs end on a trunk, not on a card  no arrowhead */
   noArrow?: boolean;
   /** explicit end cap for connectors that stop in open board rather than on a card */
@@ -308,10 +329,10 @@ export interface Connector {
 }
 
 const FLOW_COLOR: Record<FlowType, string> = {
-  poc: '#EA580C',
-  full: '#2563EB',
+  required: '#EA580C',
+  'site-dependent': '#2563EB',
+  'future-compatible': '#94A3B8',
   alert: '#DC2626',
-  dashed: '#94A3B8',
 };
 export { FLOW_COLOR };
 
@@ -320,7 +341,7 @@ function vConn(b1: number, c1: number, b2: number, c2: number, type: FlowType, p
   const z = anchor(b2, c2, 'top');
   const x1 = a.x + (opts?.dx1 ?? 0);
   const x2 = z.x + (opts?.dx2 ?? 0);
-  const scope: Scope = type === 'full' || type === 'dashed' ? 'full' : 'poc';
+  const scope: Scope = type === 'alert' ? 'required' : type;
   return {
     d: bandEntry(x1, a.y, x2, z.y, b2, opts?.lane ?? 0),
     type,
@@ -335,7 +356,7 @@ function hConn(b: number, c1: number, c2: number, type: FlowType, particles: num
   const a = anchor(b, c1, 'right');
   const z = anchor(b, c2, 'left');
   const y = a.y + (opts?.dy ?? 0);
-  const scope: Scope = type === 'full' || type === 'dashed' ? 'full' : 'poc';
+  const scope: Scope = type === 'alert' ? 'required' : type;
   return {
     d: hPath(a.x, y, z.x),
     type,
@@ -347,17 +368,18 @@ function hConn(b: number, c1: number, c2: number, type: FlowType, particles: num
 }
 
 /** short stub ending in free space (no target card) */
-function stub(b: number, c: number, side: AnchorSide, len: number, type: FlowType, label?: string): Connector {
+function stub(b: number, c: number, side: AnchorSide, len: number, type: FlowType, label?: string, dashed = false): Connector {
   const a = anchor(b, c, side);
   const x2 = side === 'right' ? a.x + len : side === 'left' ? a.x - len : a.x;
   const y2 = side === 'bottom' ? a.y + len : side === 'top' ? a.y - len : a.y;
   return {
     d: `M ${a.x} ${a.y} L ${x2} ${y2}`,
     type,
-    scope: type === 'full' || type === 'dashed' ? 'full' : 'poc',
+    scope: type === 'alert' ? 'required' : type,
     particles: 0,
+    dashed,
     noArrow: true,
-    terminator: { x: x2, y: y2, kind: type === 'dashed' ? 'open' : 'dot' },
+    terminator: { x: x2, y: y2, kind: dashed ? 'open' : 'dot' },
     label,
     labelAt: label ? { x: (a.x + x2) / 2, y: y2 + (side === 'bottom' ? 20 : side === 'top' ? -20 : 0) } : undefined,
   };
@@ -370,14 +392,14 @@ export function buildConnectors(): Connector[] {
   const c: Connector[] = [];
 
   // Band 01 -> 02 (cards 0..5 -> nodes 0..3)
-  c.push(vConn(0, 0, 1, 0, 'poc', 2, { lane: 0 }));
-  c.push(vConn(0, 1, 1, 1, 'poc', 2, { lane: 1 }));
-  c.push(vConn(0, 2, 1, 2, 'poc', 2));
-  c.push(vConn(0, 3, 1, 3, 'poc', 2, { dx2: -24 }));
-  c.push(vConn(0, 4, 1, 3, 'poc', 1));
-  c.push(vConn(0, 5, 1, 3, 'poc', 1, { dx2: 24 }));
+  c.push(vConn(0, 0, 1, 0, 'required', 2, { lane: 0 }));
+  c.push(vConn(0, 1, 1, 1, 'required', 2, { lane: 1 }));
+  c.push(vConn(0, 2, 1, 2, 'required', 2));
+  c.push(vConn(0, 3, 1, 3, 'required', 2, { dx2: -24 }));
+  c.push(vConn(0, 4, 1, 3, 'required', 1));
+  c.push(vConn(0, 5, 1, 3, 'required', 1, { dx2: 24 }));
   // card 7 sensors stub
-  c.push(stub(0, 6, 'bottom', 26, 'poc', 'FIELD WIRING · ANALOGUE / DIGITAL'));
+  c.push(stub(0, 6, 'bottom', 26, 'required', 'FIELD WIRING · ANALOGUE / DIGITAL'));
 
   // Band 02 -> 03 (nodes converge on aggregator, with FIFO chip)
   const aggTop = anchor(2, 0, 'top');
@@ -391,8 +413,8 @@ export function buildConnectors(): Connector[] {
         { x: a.x, y: busY },
         { x: busX, y: busY },
       ]),
-      type: 'poc',
-      scope: 'poc',
+      type: 'required',
+      scope: 'required',
       particles: 1,
       noArrow: true,
     });
@@ -405,26 +427,26 @@ export function buildConnectors(): Connector[] {
       { x: aggTop.x, y: bandY(2) + LANE_Y[0] },
       { x: aggTop.x, y: aggTop.y },
     ]),
-    type: 'poc',
-    scope: 'poc',
+    type: 'required',
+    scope: 'required',
     particles: 2,
   });
   // FIFO label sits on the bus, right of the merge point
   c.push({
     d: '',
-    type: 'poc',
-    scope: 'poc',
+    type: 'required',
+    scope: 'required',
     particles: 0,
     label: '≥10 LAKH EVENT FIFO · 10%/2 SPARE CHANNELS',
     labelAt: { x: busX + 250, y: busY },
   });
   // blue edge-of-network node to gateway
-  c.push(vConn(1, 4, 2, 3, 'full', 2));
+  c.push(vConn(1, 4, 2, 3, 'site-dependent', 2));
 
   // Band 03 linear chain 0->1->2->3
-  c.push(hConn(2, 0, 1, 'poc', 1));
-  c.push(hConn(2, 1, 2, 'poc', 1));
-  c.push(hConn(2, 2, 3, 'poc', 1));
+  c.push(hConn(2, 0, 1, 'required', 1));
+  c.push(hConn(2, 1, 2, 'required', 1));
+  c.push(hConn(2, 2, 3, 'required', 1));
   // GPS clock dashed tap  up into the band's clear lane, then out to the cross-cutting rail
   const gps = anchor(2, 2, 'top');
   const tapY = bandY(2) + LANE_Y[1];
@@ -434,9 +456,10 @@ export function buildConnectors(): Connector[] {
       { x: gps.x, y: tapY },
       { x: RAIL_TAP_X, y: tapY },
     ]),
-    type: 'dashed',
-    scope: 'poc',
+    type: 'required',
+    scope: 'required',
     particles: 0,
+    dashed: true,
     noArrow: true,
     terminator: { x: RAIL_TAP_X, y: tapY, kind: 'open' },
     label: 'TIME_SYNC · 7d DISCOVERY → CROSS-CUTTING',
@@ -444,49 +467,50 @@ export function buildConnectors(): Connector[] {
   });
 
   // Band 03 -> 04 : MQTT client feeds OFC + 4G (parallel)
-  c.push(vConn(2, 3, 3, 0, 'poc', 2, { lane: 0 }));
-  c.push(vConn(2, 3, 3, 1, 'poc', 2, { dx1: 26 }));
-  // failover loop between OFC and 4G with label cleanly below
+  c.push(vConn(2, 3, 3, 0, 'required', 2, { lane: 0 }));
+  c.push(vConn(2, 3, 3, 1, 'required', 2, { dx1: 26 }));
+  // mandatory parallel path relationship between Railway and mobile uplinks
   const ofc = cardRect(3, 0);
   const g4 = cardRect(3, 1);
   c.push({
     d: `M ${ofc.x + ofc.w - 18} ${ofc.y + ofc.h + 8} C ${ofc.x + ofc.w + 12} ${ofc.y + ofc.h + 36}, ${g4.x + 12} ${g4.y + g4.h + 36}, ${g4.x + 24} ${g4.y + g4.h + 8}`,
-    type: 'poc',
-    scope: 'poc',
+    type: 'required',
+    scope: 'required',
     particles: 1,
-    label: 'AUTO FAILOVER',
+    label: 'MANDATORY PARALLEL / REDUNDANT PATHS',
     labelAt: { x: (ofc.x + ofc.w + g4.x) / 2, y: ofc.y + ofc.h + 46 },
   });
   // future CCSP dashed continuation
-  c.push(stub(3, 3, 'bottom', 26, 'dashed', 'CCSP MIGRATION'));
+  c.push(stub(3, 3, 'bottom', 26, 'future-compatible', 'FUTURE SHARED-SERVICE MIGRATION', true));
 
   // Band 04 -> 05 into broker
-  c.push(vConn(3, 0, 4, 0, 'poc', 2, { dx2: -14, lane: 0 }));
-  c.push(vConn(3, 1, 4, 0, 'poc', 2, { dx2: 14, lane: 1 }));
+  c.push(vConn(3, 0, 4, 0, 'required', 2, { dx2: -14, lane: 0 }));
+  c.push(vConn(3, 1, 4, 0, 'required', 2, { dx2: 14, lane: 1 }));
   // Band 05 chain broker -> authz -> registry
-  c.push(hConn(4, 0, 1, 'poc', 1));
-  c.push(hConn(4, 1, 2, 'poc', 1));
+  c.push(hConn(4, 0, 1, 'required', 1));
+  c.push(hConn(4, 1, 2, 'required', 1));
   // PKI dashed stubs
-  c.push(stub(4, 3, 'bottom', 26, 'dashed', 'OCSP RESPONDER (PROPOSED)'));
+  c.push(stub(4, 3, 'bottom', 26, 'required', 'CERTIFICATE STATUS CHECK', true));
   const pki = anchor(4, 3, 'right');
   c.push({
     d: `M ${pki.x} ${pki.y} L ${RAIL_TAP_X} ${pki.y}`,
-    type: 'dashed',
-    scope: 'poc',
+    type: 'required',
+    scope: 'required',
     particles: 0,
+    dashed: true,
     noArrow: true,
     terminator: { x: RAIL_TAP_X, y: pki.y, kind: 'open' },
     label: 'PKI → SECURITY & PKI',
     labelAt: { x: (pki.x + RAIL_TAP_X) / 2, y: pki.y - 20 },
   });
-  c.push(stub(4, 0, 'bottom', 26, 'dashed', 'CCSP MIGRATION'));
+  c.push(stub(4, 0, 'bottom', 26, 'future-compatible', 'FUTURE PLATFORM ADAPTER', true));
 
   // Band 05 -> 06 : registry/broker -> ingestion
-  c.push(vConn(4, 2, 5, 0, 'poc', 2, { lane: 0 }));
+  c.push(vConn(4, 2, 5, 0, 'required', 2, { lane: 0 }));
 
   // Band 06 internal: 0->1, 0->2, 1->3, 2->4, 1->6, 2->6
-  c.push(hConn(5, 0, 1, 'poc', 1, { dy: -14 }));
-  c.push(hConn(5, 1, 3, 'poc', 1, { dy: -14 }));
+  c.push(hConn(5, 0, 1, 'required', 1, { dy: -14 }));
+  c.push(hConn(5, 1, 3, 'required', 1, { dy: -14 }));
   // 0 -> 2 and 2 -> 4 routed below cards
   const r0 = cardRect(5, 0);
   const r2 = cardRect(5, 2);
@@ -495,136 +519,218 @@ export function buildConnectors(): Connector[] {
   const r1 = cardRect(5, 1);
   c.push({
     d: `M ${r0.x + r0.w / 2} ${r0.y + r0.h} L ${r0.x + r0.w / 2} ${r0.y + r0.h + 16} L ${r2.x + r2.w / 2} ${r2.y + r2.h + 16} L ${r2.x + r2.w / 2} ${r2.y + r2.h}`,
-    type: 'poc',
-    scope: 'poc',
+    type: 'required',
+    scope: 'required',
     particles: 1,
   });
   c.push({
     d: `M ${r2.x + r2.w / 2 + 16} ${r2.y + r2.h} L ${r2.x + r2.w / 2 + 16} ${r2.y + r2.h + 32} L ${r4.x + r4.w / 2} ${r4.y + r4.h + 32} L ${r4.x + r4.w / 2} ${r4.y + r4.h}`,
-    type: 'poc',
-    scope: 'poc',
+    type: 'required',
+    scope: 'required',
     particles: 1,
   });
   // feedback labels back to ML (2 <- 4), dashed
   c.push({
     d: `M ${r4.x + r4.w / 2 - 16} ${r4.y + r4.h} L ${r4.x + r4.w / 2 - 16} ${r4.y + r4.h + 46} L ${r2.x + r2.w / 2 - 16} ${r2.y + r2.h + 46} L ${r2.x + r2.w / 2 - 16} ${r2.y + r2.h}`,
-    type: 'dashed',
-    scope: 'poc',
+    type: 'required',
+    scope: 'required',
     particles: 0,
+    dashed: true,
     label: 'ML LABELS',
     labelAt: { x: (r2.x + r4.x) / 2 - 30, y: r4.y + r4.h + 58 },
   });
   // taps to data lake (6) with rolling-averages chip
   c.push({
     d: `M ${r1.x + r1.w / 2 + 14} ${r1.y + r1.h} L ${r1.x + r1.w / 2 + 14} ${r1.y + r1.h + 32} L ${r6.x + r6.w / 2} ${r6.y + r6.h + 32} L ${r6.x + r6.w / 2} ${r6.y + r6.h}`,
-    type: 'poc',
-    scope: 'poc',
+    type: 'required',
+    scope: 'required',
     particles: 1,
     label: '15-DAY ROLLING AVERAGES',
     labelAt: { x: (r1.x + r1.w + r6.x) / 2, y: r6.y + r6.h + 46 },
   });
   c.push({
     d: `M ${r2.x + r2.w / 2 + 40} ${r2.y + r2.h} L ${r2.x + r2.w / 2 + 40} ${r2.y + r2.h + 16} L ${r6.x + r6.w / 2 - 16} ${r6.y + r6.h + 16} L ${r6.x + r6.w / 2 - 16} ${r6.y + r6.h}`,
-    type: 'poc',
-    scope: 'poc',
+    type: 'required',
+    scope: 'required',
     particles: 1,
   });
 
   // Band 06 -> 07
   // dashboards (5) -> users 0..2 (orange)
-  c.push(vConn(5, 5, 6, 0, 'poc', 2, { dx1: -20, lane: 0 }));
-  c.push(vConn(5, 5, 6, 1, 'poc', 2));
-  c.push(vConn(5, 5, 6, 2, 'poc', 2, { dx1: 20 }));
+  c.push(vConn(5, 5, 6, 0, 'required', 2, { dx1: -20, lane: 0 }));
+  c.push(vConn(5, 5, 6, 1, 'required', 2));
+  c.push(vConn(5, 5, 6, 2, 'required', 2, { dx1: 20 }));
   // alert engine (3) -> maintainer app (0), red
   c.push(vConn(5, 3, 6, 0, 'alert', 3, { dx2: 18, lane: 1 }));
-  // blue: dashboards -> SMMS + common dashboard
-  c.push(vConn(5, 5, 6, 3, 'full', 2, { dx1: 34 }));
-  c.push(vConn(5, 5, 6, 4, 'full', 2, { dx1: 48 }));
-  // dashed: data lake -> railway cloud copy
-  c.push(vConn(5, 6, 6, 5, 'dashed', 0));
+  // required integrations: maintenance, common dashboard and Railway Cloud packet copy
+  c.push(vConn(5, 5, 6, 3, 'required', 2, { dx1: 34 }));
+  c.push(vConn(5, 5, 6, 4, 'required', 2, { dx1: 48 }));
+  c.push(vConn(5, 6, 6, 5, 'required', 1));
 
   return c;
 }
 
 // ---------- standalone SVG export ----------
 
-export function exportSvg(mode: 'full' | 'poc'): string {
+function bytesToDataUri(bytes: ArrayBuffer, mime: string): string {
+  const view = new Uint8Array(bytes);
+  const chunk = 0x8000;
+  let binary = '';
+  for (let i = 0; i < view.length; i += chunk) {
+    binary += String.fromCharCode(...view.subarray(i, i + chunk));
+  }
+  return `data:${mime};base64,${btoa(binary)}`;
+}
+
+/** Load each local 3D JPEG and build self-contained data URIs for SVG export. */
+export async function loadIconDataUris(
+  fetcher: typeof fetch = fetch,
+): Promise<Record<string, string>> {
+  const loaded = await Promise.all(
+    Object.entries(ICON_IMAGES).map(async ([id, src]) => {
+      const response = await fetcher(src);
+      if (!response.ok) {
+        throw new Error(`Unable to load diagram icons (${response.status}).`);
+      }
+      const bytes = await response.arrayBuffer();
+      if (bytes.byteLength === 0) {
+        throw new Error(`Unable to load diagram icons: missing ${id}.`);
+      }
+      const mime = response.headers.get('Content-Type')?.split(';')[0].trim() || 'image/jpeg';
+      return [id, bytesToDataUri(bytes, mime)] as const;
+    }),
+  );
+  return Object.fromEntries(loaded);
+}
+
+export function exportSvg(mode: 'all' | 'required', iconDataUris: Record<string, string> = {}): string {
   const connectors = buildConnectors();
-  const dim = (scope: Scope) => (mode === 'poc' && scope === 'full' ? ' opacity="0.22"' : '');
   let s = '';
 
-  // defs with arrow markers
+  // Embedded CSS animations (connector draw-in + reduced-motion guard)
+  s += `<style><![CDATA[
+    .connector-draw {
+      stroke-dasharray: 3000;
+      stroke-dashoffset: 3000;
+      animation: connector-draw 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+    @keyframes connector-draw {
+      to { stroke-dashoffset: 0; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .connector-draw { animation: none; stroke-dasharray: none; stroke-dashoffset: 0; }
+      .flow-particle { display: none; }
+    }
+  ]]></style>`;
+
+  // defs: arrow markers + embedded icon images (data URIs) + per-card clip paths
   s += `<defs>`;
-  (['poc', 'full', 'alert', 'dashed'] as FlowType[]).forEach((t) => {
+  (['required', 'site-dependent', 'future-compatible', 'alert'] as FlowType[]).forEach((t) => {
     s += `<marker id="arrow-${t}" viewBox="0 0 8 8" refX="8" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L8 4 L0 8 z" fill="${FLOW_COLOR[t]}"/></marker>`;
+  });
+  Object.entries(iconDataUris).forEach(([id, dataUri]) => {
+    if (!dataUri) return;
+    // Escape & in data URIs for XML attribute safety; keep the payload otherwise intact.
+    const safeHref = dataUri.replace(/&/g, '&amp;');
+    s += `<symbol id="ico-${esc(id)}" viewBox="0 0 64 64"><image width="64" height="64" href="${safeHref}" preserveAspectRatio="xMidYMid slice"/></symbol>`;
+  });
+  BANDS.forEach((band, b) => {
+    band.cards.forEach((_, i) => {
+      const r = cardRect(b, i);
+      s += `<clipPath id="icon-clip-${b}-${i}"><rect x="${r.x + 12}" y="${r.y + 12}" width="64" height="64" rx="14"/></clipPath>`;
+    });
   });
   s += `</defs>`;
 
   s += `<rect width="${BOARD_W}" height="${BOARD_H}" rx="24" fill="#FFFFFF" stroke="#E4E4E7"/>`;
-  s += `<text x="${BOARD_PAD}" y="${BOARD_PAD + 28}" font-family="Michroma, sans-serif" font-size="26" font-weight="700" fill="#0A0A0A">RDPMS POC · ANIMATED LOW-LEVEL DESIGN</text>`;
+  s += `<text x="${BOARD_PAD}" y="${BOARD_PAD + 28}" font-family="Michroma, sans-serif" font-size="26" font-weight="700" fill="#0A0A0A">RDPMS · REQUIRED SYSTEM LOW-LEVEL DESIGN</text>`;
   s += `<text x="${BOARD_PAD}" y="${BOARD_PAD + 52}" font-family="Geist, sans-serif" font-size="11" fill="#71717A" letter-spacing="1">REMOTE DIAGNOSTICS OF SIGNALLING ASSETS · SEVEN LAYERS FROM FIELD SENSORS TO THE RDPMS CLOUD · RDSO/SPN/257/2025 v2.0</text>`;
 
   BANDS.forEach((band, b) => {
     const y = bandY(b);
-    const tintFill = mode === 'poc' && band.pocTint ? '#FFF1E3' : '#F4F4F6';
-    s += `<rect x="${BOARD_PAD}" y="${y}" width="${BAND_W}" height="${BAND_H}" rx="16" fill="${tintFill}" stroke="${band.pocTint ? '#FB923C' : '#E4E4E7'}"${dim('poc')}/>`;
+    const tintFill = mode === 'required' && band.requiredTint ? '#FFF1E3' : '#F4F4F6';
+    s += `<rect x="${BOARD_PAD}" y="${y}" width="${BAND_W}" height="${BAND_H}" rx="16" fill="${tintFill}" stroke="${band.requiredTint ? '#FB923C' : '#E4E4E7'}"/>`;
     s += `<rect x="${BOARD_PAD + BAND_PAD_X}" y="${y + 2}" width="30" height="26" rx="6" fill="#EA580C"/>`;
     s += `<text x="${BOARD_PAD + BAND_PAD_X + 15}" y="${y + 20}" font-family="Geist, sans-serif" font-size="13" font-weight="700" fill="#FFFFFF" text-anchor="middle">${esc(band.num)}</text>`;
     s += `<text x="${BOARD_PAD + BAND_PAD_X + 40}" y="${y + 20}" font-family="Michroma, sans-serif" font-size="13" font-weight="600" fill="#0A0A0A" letter-spacing="1">${esc(band.title)}</text>`;
     band.cards.forEach((card, i) => {
+      if (mode === 'required' && card.status !== 'required') return;
       const r = cardRect(b, i);
-      const dash = card.dashed ? ' stroke-dasharray="5 4"' : '';
-      const stroke = card.scope === 'full' ? '#60A5FA' : card.accent === 'red' ? '#DC2626' : card.accent === 'amber' ? '#B45309' : '#E4E4E7';
-      s += `<g${dim(card.scope)}><rect x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" rx="14" fill="#FFFFFF" stroke="${card.dashed ? '#94A3B8' : stroke}"${dash}/>`;
+      const isFuture = card.status === 'future-compatible';
+      const dash = isFuture ? ' stroke-dasharray="5 4"' : '';
+      const stroke = card.status === 'site-dependent' ? '#60A5FA' : card.accent === 'red' ? '#DC2626' : card.accent === 'amber' ? '#B45309' : '#E4E4E7';
+      s += `<g><rect x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" rx="14" fill="#FFFFFF" stroke="${isFuture ? '#94A3B8' : stroke}"${dash}/>`;
 
       // Icon square
-      const iconBg = card.scope === 'full' ? '#EFF6FF' : card.accent === 'red' ? '#FEF2F2' : card.accent === 'amber' ? '#FFFBEB' : '#FFF7ED';
+      const iconBg = card.status === 'site-dependent' ? '#EFF6FF' : isFuture ? '#F4F4F5' : card.accent === 'red' ? '#FEF2F2' : card.accent === 'amber' ? '#FFFBEB' : '#FFF7ED';
       s += `<rect x="${r.x + 12}" y="${r.y + 12}" width="64" height="64" rx="14" fill="${iconBg}"/>`;
-      const iconSrc = ICON_IMAGES[card.icon];
-      if (iconSrc) {
-        const clipId = `icon-clip-${b}-${i}`;
-        s += `<clipPath id="${clipId}"><rect x="${r.x + 12}" y="${r.y + 12}" width="64" height="64" rx="14"/></clipPath>`;
-        s += `<image href="${iconSrc}" x="${r.x + 12}" y="${r.y + 12}" width="64" height="64" preserveAspectRatio="xMidYMid slice" clip-path="url(#${clipId})"/>`;
+      if (iconDataUris[card.icon]) {
+        s += `<g clip-path="url(#icon-clip-${b}-${i})"><use href="#ico-${esc(card.icon)}" x="${r.x + 12}" y="${r.y + 12}" width="64" height="64"/></g>`;
       }
+      s += `<text x="${r.x + r.w - 8}" y="${r.y + 22}" font-family="Geist, sans-serif" font-size="6.5" font-weight="700" fill="${card.status === 'required' ? '#EA580C' : card.status === 'site-dependent' ? '#2563EB' : '#71717A'}" text-anchor="end">${esc(card.status.toUpperCase())}</text>`;
 
-      // Title
-      s += `<text x="${r.x + 12}" y="${r.y + 88}" font-family="Geist, sans-serif" font-size="11.5" font-weight="700" fill="#0A0A0A">${esc(clip(card.title, 19))}</text>`;
+      // Title (wrap up to 2 lines — matches live line-clamp-2)
+      const titleLines = wrapWords(card.title, 18, 2);
+      titleLines.forEach((line, li) => {
+        s += `<text x="${r.x + 12}" y="${r.y + 88 + li * 13}" font-family="Geist, sans-serif" font-size="11.5" font-weight="700" fill="#0A0A0A">${esc(line)}</text>`;
+      });
 
-      // Subtitle lines
-      const subLines = card.sub.split('\n');
+      // Subtitle lines — pinned near card bottom
+      const subLines = card.sub
+        .split('\n')
+        .flatMap((line) => wrapWords(line, 27, 2))
+        .slice(0, 3);
+      const subStart = r.y + Math.max(105, 88 + titleLines.length * 13 + 6);
       subLines.forEach((line, li) => {
-        s += `<text x="${r.x + 12}" y="${r.y + 105 + li * 14}" font-family="Geist, sans-serif" font-size="9" fill="#52525B">${esc(line)}</text>`;
+        s += `<text x="${r.x + 12}" y="${subStart + li * 13}" font-family="Geist, sans-serif" font-size="9" fill="#52525B">${esc(line)}</text>`;
       });
 
       s += `</g>`;
     });
   });
 
-  // Connectors with arrowheads
-  connectors.forEach((cn) => {
+  // Connectors with arrowheads + draw-in animation
+  connectors.forEach((cn, i) => {
+    if (mode === 'required' && cn.scope !== 'required') return;
     if (!cn.d) {
       // label-only connector (e.g. FIFO label)
       if (cn.label && cn.labelAt) {
         const w = cn.label.length * 5.4 + 20;
-        s += `<g${dim(cn.scope)}><rect x="${cn.labelAt.x - w / 2}" y="${cn.labelAt.y - 11}" width="${w}" height="22" rx="11" fill="#FFFFFF" stroke="#E4E4E7" filter="drop-shadow(0 1px 3px rgba(9,9,11,0.14))"/>`;
+        s += `<g><rect x="${cn.labelAt.x - w / 2}" y="${cn.labelAt.y - 11}" width="${w}" height="22" rx="11" fill="#FFFFFF" stroke="#E4E4E7"/>`;
         s += `<text x="${cn.labelAt.x}" y="${cn.labelAt.y + 4}" font-family="Geist, sans-serif" font-size="9" font-weight="600" fill="#3F3F46" text-anchor="middle">${esc(cn.label)}</text></g>`;
       }
       return;
     }
-    const dash = cn.type === 'dashed' ? ' stroke-dasharray="6 5"' : '';
-    const marker = cn.type !== 'dashed' && !cn.noArrow ? ` marker-end="url(#arrow-${cn.type})"` : '';
-    s += `<path d="${cn.d}" fill="none" stroke="${FLOW_COLOR[cn.type]}" stroke-width="2" stroke-linejoin="round"${dash}${marker}${dim(cn.scope)}/>`;
+    const isDashed = cn.dashed === true;
+    const dash = isDashed ? ' stroke-dasharray="6 5"' : '';
+    const marker = !isDashed && !cn.noArrow ? ` marker-end="url(#arrow-${cn.type})"` : '';
+    const drawClass = isDashed ? '' : ` class="connector-draw" style="animation-delay:${(0.4 + (i % 14) * 0.06).toFixed(2)}s"`;
+    s += `<path d="${cn.d}" fill="none" stroke="${FLOW_COLOR[cn.type]}" stroke-width="2" stroke-linejoin="round"${dash}${marker}${drawClass}/>`;
     if (cn.terminator) {
       const t = cn.terminator;
       s +=
         t.kind === 'open'
-          ? `<circle cx="${t.x}" cy="${t.y}" r="4" fill="#FFFFFF" stroke="${FLOW_COLOR[cn.type]}" stroke-width="1.75"${dim(cn.scope)}/>`
-          : `<circle cx="${t.x}" cy="${t.y}" r="3.5" fill="${FLOW_COLOR[cn.type]}"${dim(cn.scope)}/>`;
+          ? `<circle cx="${t.x}" cy="${t.y}" r="4" fill="#FFFFFF" stroke="${FLOW_COLOR[cn.type]}" stroke-width="1.75"/>`
+          : `<circle cx="${t.x}" cy="${t.y}" r="3.5" fill="${FLOW_COLOR[cn.type]}"/>`;
     }
     if (cn.label && cn.labelAt) {
       const w = cn.label.length * 5.4 + 20;
-      s += `<g${dim(cn.scope)}><rect x="${cn.labelAt.x - w / 2}" y="${cn.labelAt.y - 11}" width="${w}" height="22" rx="11" fill="#FFFFFF" stroke="#E4E4E7" filter="drop-shadow(0 1px 3px rgba(9,9,11,0.14))"/>`;
+      s += `<g><rect x="${cn.labelAt.x - w / 2}" y="${cn.labelAt.y - 11}" width="${w}" height="22" rx="11" fill="#FFFFFF" stroke="#E4E4E7"/>`;
       s += `<text x="${cn.labelAt.x}" y="${cn.labelAt.y + 4}" font-family="Geist, sans-serif" font-size="9" font-weight="600" fill="#3F3F46" text-anchor="middle">${esc(cn.label)}</text></g>`;
+    }
+  });
+
+  // Flow particles (SMIL animateMotion — works in standalone SVG files)
+  connectors.forEach((cn, i) => {
+    if (!cn.d || cn.particles <= 0) return;
+    if (mode === 'required' && cn.scope !== 'required') return;
+    for (let j = 0; j < cn.particles; j++) {
+      const delay = 1.2 + ((i * 7 + j * 13) % 20) / 10 + j * 1.1;
+      const dur = cn.type === 'alert' ? 2.2 : 2.6 + ((i + j) % 3) * 0.6;
+      s += `<circle class="flow-particle" r="3.5" fill="${FLOW_COLOR[cn.type]}" opacity="0">`;
+      s += `<animateMotion dur="${dur}s" begin="${delay}s" repeatCount="indefinite" path="${cn.d}"/>`;
+      s += `<animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.92;1" dur="${dur}s" begin="${delay}s" repeatCount="indefinite"/>`;
+      s += `</circle>`;
     }
   });
 
@@ -633,37 +739,43 @@ export function exportSvg(mode: 'full' | 'poc'): string {
   const ly = bandY(0);
 
   // --- Legend box ---
-  s += `<rect x="${lx}" y="${ly}" width="${RAIL_W}" height="176" rx="12" fill="#F4F4F6" stroke="#E4E4E7"/>`;
+  const legendH = 210;
+  s += `<rect x="${lx}" y="${ly}" width="${RAIL_W}" height="${legendH}" rx="12" fill="#F4F4F6" stroke="#E4E4E7"/>`;
   s += `<text x="${lx + 14}" y="${ly + 24}" font-family="Geist, sans-serif" font-size="10" font-weight="700" fill="#71717A" letter-spacing="1.5">LEGEND</text>`;
   const items: [FlowType, string][] = [
-    ['poc', 'POC PILOT FLOW  field to cloud'],
-    ['full', 'FULL-SYSTEM ADDITIONS'],
+    ['required', 'REQUIRED · DELIVERED CAPABILITY'],
+    ['site-dependent', 'SITE-DEPENDENT · MEDIA CHOSEN LOCALLY'],
     ['alert', 'ALERT / ESCALATION PATH'],
-    ['dashed', 'PROPOSED / FUTURE (CCSP · OCSP)'],
-  ];
+    ['future-compatible', 'FUTURE-COMPATIBLE · NOT CURRENT DELIVERY'],
+  ].filter(([status]) => mode === 'all' || status === 'required' || status === 'alert') as [FlowType, string][];
   items.forEach(([t, label], i) => {
     const yy = ly + 48 + i * 24;
-    const dash = t === 'dashed' ? ' stroke-dasharray="5 4"' : '';
+    const dash = t === 'future-compatible' ? ' stroke-dasharray="5 4"' : '';
     s += `<line x1="${lx + 14}" y1="${yy}" x2="${lx + 44}" y2="${yy}" stroke="${FLOW_COLOR[t]}" stroke-width="2"${dash}/><circle cx="${lx + 29}" cy="${yy}" r="3" fill="${FLOW_COLOR[t]}"/>`;
     s += `<text x="${lx + 54}" y="${yy + 3}" font-family="Geist, sans-serif" font-size="8.5" fill="#52525B">${esc(label)}</text>`;
   });
-  // POC-scope + full-system component boxes
+  // Required-system and all-flows component boxes
   const boxY1 = ly + 148;
   s += `<rect x="${lx + 14}" y="${boxY1}" width="34" height="14" rx="3" fill="#FFFFFF" stroke="#E4E4E7"/>`;
-  s += `<text x="${lx + 54}" y="${boxY1 + 11}" font-family="Geist, sans-serif" font-size="8.5" fill="#52525B">POC-SCOPE COMPONENT</text>`;
+  s += `<text x="${lx + 54}" y="${boxY1 + 11}" font-family="Geist, sans-serif" font-size="8.5" fill="#52525B">REQUIRED-SYSTEM COMPONENT</text>`;
+  if (mode === 'all') {
+    const boxY2 = ly + 170;
+    s += `<rect x="${lx + 14}" y="${boxY2}" width="34" height="14" rx="3" fill="#EFF6FF" stroke="#60A5FA"/>`;
+    s += `<text x="${lx + 54}" y="${boxY2 + 11}" font-family="Geist, sans-serif" font-size="8.5" fill="#52525B">SITE-DEPENDENT COMPONENT</text>`;
+  }
 
   // --- Cross-cutting concerns ---
-  const ccY = ly + 192;
+  const ccY = ly + legendH + 16;
   const ccItems = [
-    ['Security & PKI', 'mTLS · per-vendor CA · CRL/OCSP'],
-    ['Time Sync', 'GPS/IRNSS + NTP fallback'],
-    ['Availability', '§16 formulas · ≥99% POC target'],
-    ['Governance', 'RDSO approvals · clause 13.9 AI/ML'],
-    ['Interoperability', 'Annexure F APIs · CCSP migration'],
+    ['Security & PKI', 'Gateway, broker & platform certificates · CRL/OCSP'],
+    ['Time Sync', 'Gateway timestamping · GPS/IRNSS fallback'],
+    ['Health', 'IoT, gateway & station-uplink visibility'],
+    ['Governance', 'Application logic, models & audit evidence'],
+    ['Interoperability', 'Gateway conversion · maintenance/dashboard APIs'],
   ];
   s += `<rect x="${lx}" y="${ccY}" width="${RAIL_W}" height="${52 + ccItems.length * 44}" rx="12" fill="#F4F4F6" stroke="#94A3B8" stroke-dasharray="5 4"/>`;
   s += `<text x="${lx + 14}" y="${ccY + 22}" font-family="Geist, sans-serif" font-size="10" font-weight="700" fill="#71717A" letter-spacing="1.5">CROSS-CUTTING CONCERNS</text>`;
-  s += `<text x="${lx + 14}" y="${ccY + 36}" font-family="Geist, sans-serif" font-size="9" fill="#71717A">Applies to every layer</text>`;
+  s += `<text x="${lx + 14}" y="${ccY + 36}" font-family="Geist, sans-serif" font-size="9" fill="#71717A">Scope stated for each control</text>`;
   ccItems.forEach(([title, sub], i) => {
     const iy = ccY + 52 + i * 44;
     s += `<rect x="${lx + 12}" y="${iy}" width="${RAIL_W - 24}" height="36" rx="8" fill="#FFFFFF" stroke="#E4E4E7"/>`;
@@ -675,11 +787,11 @@ export function exportSvg(mode: 'full' | 'poc'): string {
   // --- Notes box ---
   const notesY = ccY + 52 + ccItems.length * 44 + 16;
   const noteTexts = [
-    'Applies to every layer  governance is a boundary',
-    'around the pipeline, never a stage inside it.',
+    'Each control names the components it governs.',
+    'No control is implied outside that stated scope.',
     '',
-    'Dashed taps  each dashed connector marks a control',
-    'point where policy is enforced and evidence captured.',
+    'Grey dashed — future-compatible, not current delivery.',
+    'Orange dashed — required control or feedback link.',
   ];
   s += `<rect x="${lx}" y="${notesY}" width="${RAIL_W}" height="${24 + noteTexts.length * 14}" rx="12" fill="#F4F4F6" stroke="#E4E4E7"/>`;
   noteTexts.forEach((line, i) => {
@@ -688,7 +800,7 @@ export function exportSvg(mode: 'full' | 'poc'): string {
     }
   });
 
-  return `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" width="${BOARD_W}" height="${BOARD_H}" viewBox="0 0 ${BOARD_W} ${BOARD_H}">${s}</svg>`;
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${BOARD_W}" height="${BOARD_H}" viewBox="0 0 ${BOARD_W} ${BOARD_H}">${s}</svg>`;
 }
 
 function esc(t: string) {
@@ -700,6 +812,28 @@ function esc(t: string) {
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&apos;');
 }
-function clip(t: string, n: number) {
-  return t.length > n ? t.slice(0, n - 1) + '…' : t;
+
+/** Word-wrap for SVG text; last line may be ellipsized. */
+function wrapWords(text: string, maxLen: number, maxLines: number): string[] {
+  const words = text.split(/\s+/).filter(Boolean);
+  if (words.length === 0) return [''];
+  const lines: string[] = [];
+  let cur = '';
+  for (let wi = 0; wi < words.length; wi++) {
+    const w = words[wi];
+    const next = cur ? `${cur} ${w}` : w;
+    if (next.length <= maxLen) {
+      cur = next;
+      continue;
+    }
+    if (cur) lines.push(cur);
+    if (lines.length >= maxLines - 1) {
+      const rest = words.slice(wi).join(' ');
+      lines.push(rest.length > maxLen ? rest.slice(0, maxLen - 1) + '…' : rest);
+      return lines;
+    }
+    cur = w.length > maxLen ? w.slice(0, maxLen - 1) + '…' : w;
+  }
+  if (cur) lines.push(cur);
+  return lines.slice(0, maxLines);
 }

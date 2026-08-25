@@ -10,18 +10,18 @@ const NAV_LINKS = [
   { to: '/', label: 'LLD Diagram' },
   { to: '/deep-dive', label: 'Deep Dive' },
   { to: '/field-assets', label: 'Field Assets' },
-  { to: '/poc-roadmap', label: 'POC Roadmap' },
-  { to: '/spec', label: 'Spec & Compliance' },
+  { to: '/delivery-plan', label: 'Delivery Plan' },
+  { to: '/spec', label: 'Requirements' },
 ];
 
 function FlowToggle() {
   const { mode, setMode } = useDiagram();
   const options: { id: FlowMode; label: string }[] = [
-    { id: 'full', label: 'Full system' },
-    { id: 'poc', label: 'POC pilot' },
+    { id: 'all', label: 'All statuses' },
+    { id: 'required', label: 'Required only' },
   ];
   return (
-    <div className="flex items-center rounded-full bg-raised p-1" role="tablist" aria-label="Flow mode">
+    <div className="flex items-center rounded-full bg-raised p-1" role="tablist" aria-label="Capability status filter">
       {options.map((opt) => {
         const active = mode === opt.id;
         return (
@@ -32,7 +32,7 @@ function FlowToggle() {
             onClick={() => setMode(opt.id)}
             className={cn(
               'relative rounded-full px-2.5 py-1 text-[12px] font-medium transition-colors',
-              active ? (opt.id === 'poc' ? 'text-flow-poc' : 'text-flow-full') : 'text-text-tertiary hover:text-text-primary',
+              active ? (opt.id === 'required' ? 'text-flow-required' : 'text-flow-all') : 'text-text-tertiary hover:text-text-primary',
             )}
           >
             {active && (
@@ -73,7 +73,7 @@ export default function Navbar() {
   };
 
   const zoomBtn =
-    'flex h-7 w-7 items-center justify-center rounded-md border border-stroke-default bg-container text-text-tertiary transition-colors hover:border-flow-poc-soft hover:text-text-primary active:scale-95 cursor-pointer disabled:opacity-50';
+    'flex h-7 w-7 items-center justify-center rounded-md border border-stroke-default bg-container text-text-tertiary transition-colors hover:border-flow-required-soft hover:text-text-primary active:scale-95 cursor-pointer disabled:opacity-50';
 
   return (
     <motion.header
@@ -90,7 +90,7 @@ export default function Navbar() {
         <Link to="/" className="flex min-w-0 items-center gap-3">
           <img src="/wayam-favicon.svg" alt="Wayam logo" className="h-9 w-9 shrink-0 rounded-lg" />
           <div className="min-w-0 leading-tight">
-            <div className="font-display text-[17px] font-bold text-text-primary">RDPMS POC</div>
+            <div className="font-display text-[17px] font-bold text-text-primary">RDPMS LLD</div>
             <div className="hidden truncate font-mono text-[10px] uppercase tracking-[0.08em] text-text-quaternary xl:block">
               Remote Diagnostics &amp; Predictive Maintenance · RDSO/SPN/257/2025
             </div>
@@ -107,7 +107,7 @@ export default function Navbar() {
                 cn(
                   'relative rounded-md px-2.5 py-1.5 text-[12px] font-medium whitespace-nowrap transition-colors',
                   isActive
-                    ? 'bg-raised text-flow-poc'
+                    ? 'bg-raised text-flow-required'
                     : 'text-text-tertiary hover:bg-raised hover:text-text-primary',
                 )
               }
@@ -134,7 +134,7 @@ export default function Navbar() {
                 </motion.button>
                 <motion.button
                   whileTap={{ scale: 0.95 }}
-                  className="h-7 rounded-md border border-stroke-default bg-container px-2 font-mono text-[10px] font-medium text-text-tertiary transition-colors hover:border-flow-poc-soft hover:text-text-primary active:scale-95 cursor-pointer disabled:opacity-50"
+                  className="h-7 rounded-md border border-stroke-default bg-container px-2 font-mono text-[10px] font-medium text-text-tertiary transition-colors hover:border-flow-required-soft hover:text-text-primary active:scale-95 cursor-pointer disabled:opacity-50"
                   onClick={fit}
                   disabled={!controlsReady}
                 >
@@ -150,7 +150,7 @@ export default function Navbar() {
               whileTap={{ scale: 0.97 }}
               onClick={handleDownload}
               disabled={!controlsReady}
-              className="hidden h-8 items-center gap-2 rounded-lg bg-flow-poc px-3 text-[12px] font-semibold text-white transition-colors hover:bg-[#c24a0a] disabled:opacity-50 sm:flex cursor-pointer"
+              className="hidden h-8 items-center gap-2 rounded-lg bg-flow-required px-3 text-[12px] font-semibold text-white transition-colors hover:bg-[#c24a0a] disabled:opacity-50 sm:flex cursor-pointer"
             >
               {saved ? <Check className="h-4 w-4 text-white" /> : <Download className="h-4 w-4" />}
               <span>{saved ? 'SVG saved' : 'Download SVG'}</span>
@@ -188,7 +188,7 @@ export default function Navbar() {
                   className={({ isActive }) =>
                     cn(
                       'rounded-md px-3 py-2 text-[14px] font-medium transition-colors',
-                      isActive ? 'bg-raised text-flow-poc' : 'text-text-tertiary hover:bg-raised',
+                      isActive ? 'bg-raised text-flow-required' : 'text-text-tertiary hover:bg-raised',
                     )
                   }
                 >
@@ -209,7 +209,7 @@ export default function Navbar() {
                       <Plus className="h-3.5 w-3.5" />
                     </button>
                     <button
-                      className="h-8 rounded-md border border-stroke-default bg-container px-2.5 font-mono text-[11px] font-medium text-text-tertiary transition-colors hover:border-flow-poc-soft hover:text-text-primary disabled:opacity-50"
+                      className="h-8 rounded-md border border-stroke-default bg-container px-2.5 font-mono text-[11px] font-medium text-text-tertiary transition-colors hover:border-flow-required-soft hover:text-text-primary disabled:opacity-50"
                       onClick={fit}
                       disabled={!controlsReady}
                     >
@@ -219,7 +219,7 @@ export default function Navbar() {
                   <button
                     onClick={handleDownload}
                     disabled={!controlsReady}
-                    className="flex h-9 items-center justify-center gap-2 rounded-lg bg-flow-poc px-3.5 text-[13px] font-semibold text-white disabled:opacity-50"
+                    className="flex h-9 items-center justify-center gap-2 rounded-lg bg-flow-required px-3.5 text-[13px] font-semibold text-white disabled:opacity-50"
                   >
                     {saved ? <Check className="h-4 w-4 text-white" /> : <Download className="h-4 w-4" />}
                     <span>{saved ? 'SVG saved' : 'Download SVG'}</span>

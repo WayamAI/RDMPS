@@ -18,7 +18,7 @@ function CtaCard({
 }) {
   const styles =
     variant === 'orange'
-      ? 'bg-flow-poc text-white border-transparent hover:shadow-[0_12px_36px_rgba(234,88,12,0.35)]'
+      ? 'bg-flow-required text-white border-transparent hover:shadow-[0_12px_36px_rgba(234,88,12,0.35)]'
       : 'bg-container text-text-primary border-stroke-default hover:border-stroke-active hover:shadow-[0_12px_32px_rgba(9,9,11,0.10)]'
   return (
     <motion.div
@@ -57,14 +57,14 @@ function CtaCard({
   )
 }
 
-export default function RoadmapCrossLinks() {
+export default function DeliveryPlanLinks() {
   return (
     <section className="mx-auto w-full max-w-[1200px] px-6 pb-28">
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
         <CtaCard
           to="/"
           title="Explore the animated LLD"
-          sub="Seven bands, live flow particles, zoom and POC/full-system toggle."
+          sub="Seven bands, live flow particles, zoom and Required system/All flows toggle."
           variant="orange"
           delay={0}
         />

@@ -1,125 +1,125 @@
-export interface Annexure {
+export interface RequirementModule {
   letter: string;
   title: string;
   role: string;
   chips: string[];
 }
 
-export const ANNEXURES: Annexure[] = [
+export const REQUIREMENT_MODULES: RequirementModule[] = [
   {
     letter: 'A',
-    title: 'System architecture & topology',
-    role: 'The five-layer reference model (Figures 1–2) every band on this site is drawn from.',
-    chips: ['Bands 01–07'],
+    title: 'Standard field and packet naming',
+    role: 'Defines identifiers and names shared by packets, interfaces, reports and screens.',
+    chips: ['Naming', 'Identifiers', 'Sampling'],
   },
   {
     letter: 'B',
-    title: 'Communication protocol',
-    role: 'MQTT topic tree, 12 packet types, and the identifier grammar (stngw_id, para_id…).',
-    chips: ['Band 05', '§5', 'Deep-dive 01/02'],
+    title: 'Gateway and application data exchange',
+    role: 'Defines publish-subscribe messages, topics, security and maintenance-system exchange.',
+    chips: ['Messages', 'Topics', 'Security'],
   },
   {
     letter: 'C',
-    title: 'Asset set & hard logics',
-    role: '65 prediction + 77 failure logics with LD/HD constants per asset class.',
-    chips: ['Band 06', 'Deep-dive 04'],
+    title: 'Failure, prediction and AI model guidance',
+    role: 'Defines approved threshold logic and guidance for developing and reviewing predictive models.',
+    chips: ['Failure', 'Prediction', 'AI models'],
   },
   {
     letter: 'D',
-    title: 'Sensor & IoT hardware',
-    role: 'Transducer classes, scan resolution, buffering and enclosure requirements.',
-    chips: ['Bands 01–02'],
+    title: 'Alert workflow and application processes',
+    role: 'Defines alert types, feedback, maintenance mode, escalation and performance measures.',
+    chips: ['Alerts', 'Feedback', 'Escalation'],
   },
   {
     letter: 'E',
-    title: 'Web dashboard screens',
-    role: 'Role-scoped screens for JE / SSE / ASTE / DSTE with drill-down hierarchy.',
-    chips: ['Band 07'],
+    title: 'Desktop application interface',
+    role: 'Provides the desktop screen template for dashboards, alerts, telemetry and reports.',
+    chips: ['Desktop', 'Reports', 'Operations'],
   },
   {
     letter: 'F',
-    title: 'Common-dashboard APIs',
-    role: 'Five REST endpoints feeding the Railway-board common dashboard.',
-    chips: ['Band 07'],
+    title: 'Common dashboard APIs',
+    role: 'Defines management-report interfaces for alerts, telemetry, assets and performance.',
+    chips: ['Management', 'Reports', 'APIs'],
   },
   {
     letter: 'G',
-    title: 'Mobile app & Ack workflow',
-    role: 'Maintainer app with acknowledgement, escalation and closure flow.',
-    chips: ['Band 07', 'Deep-dive 03'],
+    title: 'Mobile application interface',
+    role: 'Provides the mobile screen template for field monitoring and maintenance actions.',
+    chips: ['Mobile', 'Monitoring', 'Maintenance'],
   },
 ];
 
-export interface Clause {
+export interface RequirementMapping {
   ref: string;
   requirement: string;
   lands: string;
   design: string;
 }
 
-export const CLAUSES: Clause[] = [
+export const REQUIREMENT_MAPPINGS: RequirementMapping[] = [
   {
-    ref: '§7.2',
-    requirement: 'Redundant communication paths per gateway',
-    lands: 'Band 04  OFC/MPLS + 4G/5G failover',
+    ref: 'Station uplinks',
+    requirement: 'Optical or IP primary path with mandatory cellular redundancy',
+    lands: 'Network and gateway',
     design:
-      'Every gateway carries two uplinks. OFC/MPLS is the primary path (solid orange connector); the 4G/5G cellular link is drawn as the failover pair. Broker sessions re-establish on path switch without packet loss because of the Band-03 store-&-forward buffer.',
+      'The station gateway uses the Railway optical or IP network as its primary application path. LTE, 4G or 5G operates in parallel as the mandatory redundant channel, with at least 10 Mbps provisioned.',
   },
   {
-    ref: '§11.12',
+    ref: 'Data custody',
     requirement: 'Data copy to Railway Cloud',
-    lands: 'Band 06/07  dashed replication link',
+    lands: 'Station gateway or intermediate platform',
     design:
-      'A one-way replication connector from the analytics store to Railway Cloud is drawn dashed gray  a proposed interface, not part of the POC pilot path. It carries no alert traffic and can be severed without affecting the pilot.',
+      'Image packets and parameter packets are sent to Railway Cloud from the station gateway or intermediate service platform, with the source selected by Railway management for technical feasibility.',
   },
   {
-    ref: '§13.9',
-    requirement: 'AI/ML governance & review',
-    lands: 'Cross-cutting  Governance; cold-start ladder',
+    ref: 'Model review',
+    requirement: 'Periodic review of AI and machine-learning usefulness',
+    lands: 'Analytics governance',
     design:
-      'Models ship behind a governance gate: shadow → advisory → actuating. The cold-start ladder (deep-dive 04) encodes the review cadence, and the Governance card in the cross-cutting rail owns model versioning and sign-off records.',
+      'RDSO and Zonal Railways periodically review model usefulness. Vendors implement the resulting feedback and support the separately issued evaluation mechanism.',
   },
   {
-    ref: '§16',
-    requirement: 'Availability formulas & KPI computation',
-    lands: 'Cross-cutting  Availability; ≥99% POC target',
+    ref: 'Health availability',
+    requirement: 'Availability reporting for field-system health',
+    lands: 'Health summary and reporting',
     design:
-      'Availability = MTBF / (MTBF + MTTR) computed per asset class and rolled up to station level. The POC target of ≥99% is rendered as the KPI card status dot; the formula lives in the Availability cross-cutting panel.',
+      'Availability is calculated from accumulated healthy time over the selected duration for sensors, IoT devices, station gateways and networks. The approved document does not set a 99% target.',
   },
   {
-    ref: 'Port 8883 / mTLS',
-    requirement: 'Broker requires client certificates',
-    lands: 'Band 05  broker card',
+    ref: 'Platform trust',
+    requirement: 'Certificate-authenticated publish-subscribe connections',
+    lands: 'Intermediate service platform',
     design:
-      'The MQTT broker card shows port 8883 with mutual TLS: every gateway and subscriber presents a client certificate. The spec chip "port 8883 · mTLS" sits on the broker card and the security cross-cutting panel lists the PKI chain.',
+      'Publishers and subscribers authenticate with certificates from a trusted authority. TLS protects communication, topic authorization limits access, and CRL or OCSP checks block revoked certificates.',
   },
   {
-    ref: '≥10 lakh / ≥50 lakh',
-    requirement: 'IoT FIFO / gateway store-&-forward buffers',
-    lands: 'Bands 02/03',
+    ref: 'Event retention',
+    requirement: 'IoT and gateway first-in, first-out buffers',
+    lands: 'IoT devices and station gateway',
     design:
-      'IoT sensor nodes buffer ≥10 lakh packets in FIFO; edge gateways store & forward ≥50 lakh. Both numbers appear as spec chips on the Band-02 node card and the Band-03 gateway card, sized against worst-case outage windows.',
+      'Each IoT device stores at least 10 lakh events and each station gateway stores at least 50 lakh events. Both retain the newest records and prevent event loss during power or communication failures.',
   },
   {
-    ref: '≤20 ms',
-    requirement: 'Configurable scan resolution; event bursts',
-    lands: 'Bands 02, parameter_e',
+    ref: 'Fast event capture',
+    requirement: 'Configurable 20 ms operation-signature sampling',
+    lands: 'Point machines and electric lifting barriers',
     design:
-      'parameter_e configures the scan resolution down to 20 ms. Fast scans catch transient signatures (point-machine current spikes); event bursts ride the same MQTT topic as periodic telemetry with a burst flag.',
+      'Voltage and current are captured every 20 ms or faster during a point-machine or electric lifting-barrier operation. This event-specific requirement does not mandate continuous 20 ms sampling for every channel.',
   },
   {
-    ref: '≤1 min',
-    requirement: 'Event-to-alert latency',
-    lands: 'Band 06 alert engine',
+    ref: 'Event updates',
+    requirement: 'Event-to-application update time',
+    lands: 'Gateway-to-application flow',
     design:
-      'The alert engine budget: field event → MQTT publish → rule evaluation → alert dispatch in under one minute. The latency chip on the Band-06 card is the head-of-line KPI for the whole pilot path.',
+      'The existing packet scheme normally updates an event at the application within one minute. The timing may change if the approved packet-sending scheme changes.',
   },
   {
-    ref: 'Escalation 0/30 m/1 h/2 h',
-    requirement: 'Maintainer → JE/SE → SSE → ASTE/DSTE',
-    lands: 'Deep-dive 03 ladder',
+    ref: 'Alert escalation',
+    requirement: 'Maintainer, engineering and officer notifications',
+    lands: 'Application alert workflow',
     design:
-      'Unacknowledged alerts climb the ladder: maintainer at T+0, JE/SE at +30 min, SSE at +1 h, ASTE/DSTE at +2 h. The pinned escalation-ladder sequence in deep-dive 03 animates each rung with the red alert-flow color.',
+      'Alerts go to the maintainer immediately, then to JE or SE after 30 minutes, SSE after one hour, and ASTE or DSTE after two hours. Railway configuration may change these indicative durations.',
   },
 ];
 
@@ -134,61 +134,55 @@ export const STANDARDS: Standard[] = [
   {
     body: 'RDSO',
     name: 'SPN/257/2025 v2.0',
-    role: 'The parent spec  Remote Diagnostics & Predictive Maintenance for signalling.',
+    role: 'Approved requirements for remote diagnostics and predictive maintenance of signalling.',
     accent: 'orange',
   },
   {
     body: 'RDSO',
-    name: 'SPN/197',
-    role: 'Earthing & bonding practice for signalling installations.',
+    name: 'SPN/144',
+    role: 'Environmental, quality and software-change requirements for signalling equipment.',
     accent: 'orange',
   },
   {
     body: 'IEC',
     name: '60688 Class 1',
-    role: 'Measuring transducers  accuracy class for analog telemetry channels.',
+    role: 'Accuracy requirement for electrical measuring transducers; current sensors may be 2% or better.',
     accent: 'slate',
   },
   {
-    body: 'ISO/IEC',
-    name: '5338',
-    role: 'AI system life-cycle processes  governs model build & retirement.',
-    accent: 'blue',
-  },
-  {
-    body: 'ISO/IEC',
-    name: '42001',
-    role: 'AI management systems  the org-level governance frame.',
-    accent: 'blue',
-  },
-  {
-    body: 'ISO/IEC',
-    name: '23894',
-    role: 'AI risk management  feeds the cold-start ladder & review gates.',
-    accent: 'blue',
+    body: 'IEC',
+    name: '61326',
+    role: 'Industrial electromagnetic-immunity requirements for field sensors and IoT devices.',
+    accent: 'slate',
   },
   {
     body: 'NCCS',
     name: 'ITSAR',
-    role: 'Cipher suites & telecom security baseline for the 4G/5G path.',
+    role: 'Source for permitted cryptographic controls in mutual-TLS connections.',
     accent: 'slate',
   },
   {
     body: 'TEC',
-    name: '31318',
-    role: 'IoT device declaration  conformity for field sensor hardware.',
+    name: '31318:2025',
+    role: 'Security code of practice and declaration requirement for IoT devices and gateways.',
     accent: 'slate',
   },
   {
     body: 'STQC',
     name: 'Safe-to-Host',
-    role: 'Cloud hosting certification for the analytics & dashboard tier.',
+    role: 'Application security and vulnerability clearance against the latest OWASP Top 10.',
     accent: 'slate',
+  },
+  {
+    body: 'ISO/IEC',
+    name: 'JTC 1/SC 42',
+    role: 'Referenced family for machine-learning and artificial-intelligence algorithms.',
+    accent: 'blue',
   },
   {
     body: 'C-DOT',
     name: 'CCSP / oneM2M',
-    role: 'Future platform migration target  drawn as dashed proposed links.',
+    role: 'Programme recommendation: preserve future compatibility with the shared-service platform over MQTT.',
     accent: 'blue',
   },
 ];
@@ -201,8 +195,8 @@ export interface LayerMapping {
 export const LAYER_MAP: LayerMapping[] = [
   { figure: 'Users', band: '07' },
   { figure: 'Application', band: '06' },
-  { figure: 'ISP', band: '05' },
-  { figure: 'Gateway', band: '03 (+ Network 04)' },
-  { figure: 'IoT', band: '02' },
-  { figure: 'Sensors', band: '01' },
+  { figure: 'Intermediate service platform', band: '05' },
+  { figure: 'Station gateway and network', band: '03–04' },
+  { figure: 'IoT devices', band: '02' },
+  { figure: 'Sensors and equipment interfaces', band: '01' },
 ];

@@ -12,16 +12,18 @@ export function Icon({ id, className }: { id: string; className?: string }) {
   );
 }
 
-/** 3D rendered icon (public/icons/*.jpeg), falls back to the line-icon sprite. */
+/** Locally stored 3D JPEG artwork from public/icons. */
 export function Icon3D({ id, className }: { id: string; className?: string }) {
   const src = ICON_IMAGES[id];
-  if (!src) return <Icon id={id} className={className} />;
-  return <img src={src} alt="" className={cn('object-cover', className)} />;
+  if (!src) {
+    throw new Error(`Unknown diagram icon: ${id}`);
+  }
+  return <img src={src} alt="" className={cn('h-full w-full object-contain', className)} />;
 }
 
 export function Eyebrow({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={cn('font-mono text-xs font-semibold uppercase tracking-eyebrow text-flow-poc', className)}>
+    <div className={cn('font-mono text-xs font-semibold uppercase tracking-eyebrow text-flow-required', className)}>
       {children}
     </div>
   );
@@ -31,7 +33,7 @@ export function NumberPill({ n, className }: { n: string; className?: string }) 
   return (
     <span
       className={cn(
-        'flex h-7 w-8 items-center justify-center rounded-md bg-flow-poc font-mono text-[13px] font-bold text-white',
+        'flex h-7 w-8 items-center justify-center rounded-md bg-flow-required font-mono text-[13px] font-bold text-white',
         className,
       )}
     >
@@ -40,12 +42,12 @@ export function NumberPill({ n, className }: { n: string; className?: string }) 
   );
 }
 
-export function SpecChip({ children, tone = 'poc' }: { children: React.ReactNode; tone?: 'poc' | 'slate' }) {
+export function SpecChip({ children, tone = 'required' }: { children: React.ReactNode; tone?: 'required' | 'slate' }) {
   return (
     <span
       className={cn(
         'inline-flex items-center rounded-full px-2.5 py-1 font-mono text-[10px] font-medium',
-        tone === 'poc' ? 'bg-flow-poc-bg text-flow-poc-bright' : 'bg-raised text-text-secondary',
+        tone === 'required' ? 'bg-flow-required-bg text-flow-required-bright' : 'bg-raised text-text-secondary',
       )}
     >
       {children}

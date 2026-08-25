@@ -20,7 +20,7 @@ Isometric 3D diorama of a modern Indian Railways smart interlocked station and d
 
 ---
 
-## 📡 2. Band 01: Field Assets & Sensors (Annexure C Set)
+## 📡 2. Band 01: Field Assets & Sensors (Requirement Module C Set)
 
 ### 2.1 Point Machine (Electric Point Operating Mechanism)
 ```
@@ -107,7 +107,7 @@ Isometric 3D model of a cryptographic hardware security appliance (HSM). Solid o
 
 ## 🧠 7. Band 06: RDPMS AI Analytics & Hard-Logic Engine
 
-### 7.1 Hard-Logic Decision Tree Engine (Annexure C Rules)
+### 7.1 Hard-Logic Decision Tree Engine (Requirement Module C Rules)
 ```
 Isometric 3D render representing a deterministic rule engine. Multi-tiered geometric branching logic tree rendered in matte graphite pillars with glowing safety orange rule gates (65 prediction + 77 failure logics). Glowing data spheres navigate the logic paths into verified alert outputs. Sharp, organized, architectural isometric layout.
 ```
@@ -126,7 +126,7 @@ Isometric 3D model of a massive high-availability cloud data repository. Layered
 
 ## 📱 8. Band 07: Maintainer & Enterprise Consoles
 
-### 8.1 Rugged Mobile Maintainer Tablet (Annexure G Workflow)
+### 8.1 Rugged Mobile Maintainer Tablet (Requirement Module G Workflow)
 ```
 Isometric 3D model of a ruggedized field tablet computer in heavy-duty rubberized black casing with safety orange corner bumpers. Bright screen display showing live point machine vibration curve, one-touch "Acknowledge Alert" button, and audio-visual siren badge. Floating holographic wrench and checkmark icons.
 ```

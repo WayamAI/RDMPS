@@ -1,7 +1,7 @@
 import SpecHero from '@/components/spec/SpecHero';
 import ArchitectureFigure from '@/components/spec/ArchitectureFigure';
-import AnnexureIndex from '@/components/spec/AnnexureIndex';
-import ClauseTraceability from '@/components/spec/ClauseTraceability';
+import RequirementsIndex from '@/components/spec/RequirementsIndex';
+import RequirementTraceability from '@/components/spec/RequirementTraceability';
 import StandardsRegister from '@/components/spec/StandardsRegister';
 import ClosingCTA from '@/components/spec/ClosingCTA';
 
@@ -13,10 +13,10 @@ export default function Spec() {
         <ArchitectureFigure />
       </div>
       <div className="border-t border-stroke-default">
-        <AnnexureIndex />
+        <RequirementsIndex />
       </div>
       <div className="border-t border-stroke-default">
-        <ClauseTraceability />
+        <RequirementTraceability />
       </div>
       <div className="border-t border-stroke-default">
         <StandardsRegister />

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { animate, motion, useInView } from 'framer-motion'
 import { Check, Minus } from 'lucide-react'
 import { EASE, FONT_BODY, FONT_DISPLAY, FONT_MONO } from '@/components/field-assets/shared'
-import { FULL_SCOPE, IN_SCOPE, KPIS } from './phases'
+import { ALL_FLOW_SCOPE, REQUIRED_SCOPE, KPIS } from './phases'
 
 function CountUp({
   value,
@@ -94,17 +94,17 @@ export default function ScopeContract() {
   return (
     <section className="mx-auto w-full max-w-[1200px] px-6 pb-24">
       <div className="mb-12">
-        <p className={`${FONT_MONO} text-[11px] uppercase tracking-[0.14em] text-flow-poc`}>
-          POC scope contract
+        <p className={`${FONT_MONO} text-[11px] uppercase tracking-[0.14em] text-flow-required`}>
+          Delivery boundaries
         </p>
         <h2 className={`${FONT_DISPLAY} mt-3 text-[26px] font-bold tracking-tight text-text-primary sm:text-[32px]`}>
-          What the pilot proves  and what it defers.
+          What the Required system includes—and what remains site-dependent or future-compatible.
         </h2>
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <ScopeColumn title="In the pilot" items={IN_SCOPE} tone="green" side="left" />
-        <ScopeColumn title="Full system only" items={FULL_SCOPE} tone="blue" side="right" />
+        <ScopeColumn title="Required system" items={REQUIRED_SCOPE} tone="green" side="left" />
+        <ScopeColumn title="Site-dependent · Future-compatible" items={ALL_FLOW_SCOPE} tone="blue" side="right" />
       </div>
 
       <div className="mt-12 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -125,7 +125,7 @@ export default function ScopeContract() {
               {k.label}
             </p>
             <p className={`${FONT_BODY} mt-1 text-[12px] text-text-secondary`}>
-              {k.label.startsWith('availability') ? 'per §16 formulas' : 'at 6 months of soak'}
+              {k.label.startsWith('availability') ? 'per Requirement 16 formulas' : 'at 6 months of soak'}
             </p>
           </motion.div>
         ))}

@@ -6,6 +6,8 @@ import { useGSAP } from '@gsap/react';
 import { cn } from '@/lib/utils';
 import { Eyebrow, SpecChip } from '@/components/home/atoms';
 import Reveal from '@/components/home/Reveal';
+import { MermaidDiagram } from '@/components/MermaidDiagram';
+import { ESCALATION_MERMAID } from '@/lib/mermaidDiagrams';
 import { Landmark, LayoutDashboard, Monitor, Smartphone } from 'lucide-react';
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
@@ -282,7 +284,7 @@ function StateMachine() {
         <div className="mt-1 flex items-center justify-between font-mono text-[10px] uppercase tracking-wide text-text-tertiary">
           <span>token walks NORMAL → PREDICTIVE → FAILURE → ack → NORMAL</span>
           {selected && (
-            <button onClick={() => setSelected(null)} className="text-flow-poc underline cursor-pointer">
+            <button onClick={() => setSelected(null)} className="text-flow-required underline cursor-pointer">
               resume loop
             </button>
           )}
@@ -519,6 +521,19 @@ export default function SectionAlerts() {
 
       <Reveal delay={0.08} className="mt-10">
         <StateMachine />
+      </Reveal>
+
+      <Reveal delay={0.1} className="mt-8">
+        <div className="overflow-hidden rounded-2xl border border-stroke-default bg-container p-4 md:p-5">
+          <div className="font-mono text-[11px] uppercase tracking-[0.14em] text-text-tertiary">
+            Escalation path · maintainer to HQ
+          </div>
+          <MermaidDiagram
+            chart={ESCALATION_MERMAID}
+            ariaLabel="Alert escalation ladder from asset alert through maintainer, JE/SSE, ASTE/DSTE, to SMMS"
+            className="mt-3 min-h-[240px]"
+          />
+        </div>
       </Reveal>
 
       <div className="mt-10">

@@ -21,7 +21,7 @@ export const PHASES: Phase[] = [
   {
     id: 'P1',
     pill: 'P1',
-    title: 'Lab Bench POC',
+    title: 'Lab Bench Validation',
     months: 'M2–M6',
     body: 'Bench-simulated assets, full packet suite (all 12 types) validated against the ISP sandbox, second-vendor simulator (vcc/vgc) stood up.',
     deliverables: ['Bench-simulated asset rig', 'All 12 packet types validated', 'ISP sandbox interop', 'vcc/vgc simulator live'],
@@ -59,24 +59,24 @@ export const PHASES: Phase[] = [
     pill: 'P5',
     title: 'Evaluation & Graduation',
     months: 'M16–M18',
-    body: '§16 availability computation, alert KPI audit, clause 13.9 AI/ML review, graduation recommendation to RDSO.',
-    deliverables: ['§16 availability computation', 'Alert KPI audit', 'Clause 13.9 AI/ML review', 'Graduation recommendation'],
-    gate: 'POC closure report.',
+    body: 'Requirement 16 availability computation, alert KPI audit, requirement 13.9 AI/ML review, graduation recommendation to RDSO.',
+    deliverables: ['Requirement 16 availability computation', 'Alert KPI audit', 'Requirement 13.9 AI/ML review', 'Graduation recommendation'],
+    gate: 'Delivery acceptance report.',
   },
 ]
 
-export const IN_SCOPE = [
-  'Single interlocked station (all mandatory Annexure C assets)',
+export const REQUIRED_SCOPE = [
+  'Single interlocked station (all mandatory requirement module C assets)',
   'Point machines (≥8 sensors, 20 ms signatures)',
   'DC track circuits (9 parameters per circuit)',
   'Signals (main 3+2, calling-on 3, shunt 6)',
   'IPS + 7 equipment room classes (F0–F6)',
   'IoT node + Station Gateway with MQTT over mTLS',
-  'ISP middleware + Annexure E web dashboard + Annexure G app',
+  'ISP middleware + requirement module E web dashboard + requirement module G app',
   'Second vendor simulation (vcc / vgc codes)',
 ]
 
-export const FULL_SCOPE = [
+export const ALL_FLOW_SCOPE = [
   'Division-wide / zone-wide multi-station rollouts',
   'Commercial Railway Telecom billing interfaces',
   'Integration with SMMS / COIS legacy ticketing systems',

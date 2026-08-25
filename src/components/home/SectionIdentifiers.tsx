@@ -52,7 +52,7 @@ export default function SectionIdentifiers() {
           </h2>
           <p className="mt-4 text-[15px] leading-relaxed text-text-secondary">
             RDPMS addresses every gateway and every measured parameter with 4-byte identifiers carried in each MQTT
-            topic as <code className="rounded bg-flow-poc/15 px-1.5 py-0.5 font-mono text-[13px] text-flow-poc border border-flow-poc/30">{'{role}/{sender_id}/{receiver_id}'}</code>{' '}
+            topic as <code className="rounded bg-flow-required/15 px-1.5 py-0.5 font-mono text-[13px] text-flow-required border border-flow-required/30">{'{role}/{sender_id}/{receiver_id}'}</code>{' '}
             and inside every packet payload.
           </p>
 
@@ -78,8 +78,8 @@ export default function SectionIdentifiers() {
           </div>
 
           {/* worked decode */}
-          <div className="mt-6 rounded-xl border border-flow-poc/30 bg-container p-5">
-            <div className="font-mono text-[11px] uppercase tracking-[0.08em] text-flow-poc font-semibold">
+          <div className="mt-6 rounded-xl border border-flow-required/30 bg-container p-5">
+            <div className="font-mono text-[11px] uppercase tracking-[0.08em] text-flow-required font-semibold">
               Worked decode · para_id = 0001000C
             </div>
             <div className="mt-4 flex flex-wrap gap-3">
@@ -93,7 +93,7 @@ export default function SectionIdentifiers() {
                   <div className="rounded-lg border border-stroke-default bg-raised px-4 py-2.5 text-center">
                     <div className="font-mono text-lg font-bold text-text-primary">{b}</div>
                   </div>
-                  <div className="mx-auto mt-1 h-3 w-px bg-flow-poc/60" />
+                  <div className="mx-auto mt-1 h-3 w-px bg-flow-required/60" />
                   <div className="text-center font-mono text-[10px] text-text-tertiary mt-1">{meaning}</div>
                 </div>
               ))}
@@ -107,7 +107,7 @@ export default function SectionIdentifiers() {
                 {ASSET_CODES.map(([code, hexCode, name], i) => (
                   <tr key={code} className={cn('border-b border-stroke-muted last:border-0', i % 2 === 1 && 'bg-raised/30')}>
                     <td className="px-4 py-2.5 font-mono text-[12px] font-bold text-text-primary">{code}</td>
-                    <td className="px-4 py-2.5 font-mono text-[12px] text-flow-poc font-semibold">{hexCode}</td>
+                    <td className="px-4 py-2.5 font-mono text-[12px] text-flow-required font-semibold">{hexCode}</td>
                     <td className="px-4 py-2.5 text-[13px] text-text-secondary">{name}</td>
                   </tr>
                 ))}
@@ -118,7 +118,7 @@ export default function SectionIdentifiers() {
 
         {/* Hex decoder widget */}
         <Reveal delay={0.1}>
-          <div className="rounded-2xl bg-container border border-stroke-default p-6 text-text-primary shadow-xl focus-within:ring-2 focus-within:ring-flow-poc/60">
+          <div className="rounded-2xl bg-container border border-stroke-default p-6 text-text-primary shadow-xl focus-within:ring-2 focus-within:ring-flow-required/60">
             <div className="font-mono text-[11px] uppercase tracking-[0.14em] text-text-tertiary">Interactive hex decoder</div>
             <div className="mt-4 flex gap-2">
               {(
@@ -132,7 +132,7 @@ export default function SectionIdentifiers() {
                   onClick={() => setMode(m)}
                   className={cn(
                     'rounded-full px-3 py-1.5 font-mono text-[11px] transition-colors cursor-pointer',
-                    mode === m ? 'bg-flow-poc text-white' : 'bg-raised text-text-tertiary hover:bg-raised-2 hover:text-text-primary border border-stroke-default',
+                    mode === m ? 'bg-flow-required text-white' : 'bg-raised text-text-tertiary hover:bg-raised-2 hover:text-text-primary border border-stroke-default',
                   )}
                 >
                   {label}
@@ -142,7 +142,7 @@ export default function SectionIdentifiers() {
             <input
               value={hex}
               onChange={(e) => setHex(e.target.value.toUpperCase().replace(/[^0-9A-F]/g, '').slice(0, 8))}
-              className="mt-4 w-full rounded-lg border border-stroke-default bg-raised px-4 py-3 font-mono text-xl tracking-[0.3em] text-text-primary outline-none focus:border-flow-poc"
+              className="mt-4 w-full rounded-lg border border-stroke-default bg-raised px-4 py-3 font-mono text-xl tracking-[0.3em] text-text-primary outline-none focus:border-flow-required"
               maxLength={8}
               spellCheck={false}
               aria-label="8 hex characters"
@@ -191,7 +191,7 @@ export default function SectionIdentifiers() {
               )}
             </div>
             <div className="mt-4 text-right font-mono text-[10px] text-text-tertiary">
-              topic: <code className="text-flow-poc font-semibold">{'{role}/{sender}/{receiver}'}</code> · 4-byte big-endian
+              topic: <code className="text-flow-required font-semibold">{'{role}/{sender}/{receiver}'}</code> · 4-byte big-endian
             </div>
           </div>
         </Reveal>

@@ -6,8 +6,8 @@ import { useDiagram } from '@/lib/diagram-context';
 const LINKS = [
   { to: '/deep-dive', label: 'Deep Dive' },
   { to: '/field-assets', label: 'Field Assets' },
-  { to: '/poc-roadmap', label: 'POC Roadmap' },
-  { to: '/spec', label: 'Spec & Compliance' },
+  { to: '/delivery-plan', label: 'Delivery Plan' },
+  { to: '/spec', label: 'Requirements' },
 ];
 
 export default function Footer() {
@@ -26,7 +26,7 @@ export default function Footer() {
         {[0, 1, 2].map((i) => (
           <span
             key={i}
-            className="divider-dot absolute -top-[3px] h-[7px] w-[7px] rounded-full bg-flow-poc"
+            className="divider-dot absolute -top-[3px] h-[7px] w-[7px] rounded-full bg-flow-required"
             style={{ animationDelay: `${i * 1}s` }}
           />
         ))}
@@ -37,14 +37,14 @@ export default function Footer() {
           <div className="flex items-center gap-3">
             <img src="/wayam-favicon.svg" alt="Wayam logo" className="h-10 w-10 rounded-lg" />
             <div>
-              <div className="font-display text-lg font-bold text-text-primary">RDPMS POC</div>
+              <div className="font-display text-lg font-bold text-text-primary">RDPMS LLD</div>
               <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-text-quaternary">
                 Remote Diagnostics &amp; Predictive Maintenance
               </div>
             </div>
           </div>
           <p className="mt-5 max-w-sm text-sm leading-relaxed text-text-tertiary">
-            Animated low-level design for the RDPMS proof of concept  seven layers from field sensors to the RDPMS
+            Animated low-level design for the required RDPMS system: seven layers from field sensors to the RDPMS
             cloud, built to RDSO/SPN/257/2025 v2.0.
           </p>
         </div>
@@ -80,9 +80,9 @@ export default function Footer() {
         <div>
           <div className="font-mono text-[11px] uppercase tracking-[0.14em] text-text-quaternary">Program</div>
           <p className="mt-4 font-mono text-[11px] leading-relaxed text-text-quaternary">
-            POC PILOT · SINGLE INTERLOCKED STATION
+            REQUIRED SYSTEM · SINGLE INTERLOCKED STATION
             <br />
-            18-MONTH PROGRAM · ANNEXURE C SET
+            18-MONTH DELIVERY PLAN · REQUIRED ASSET SET
             <br />
             MQTT/mTLS · ISP MIDDLEWARE
           </p>
@@ -91,7 +91,7 @@ export default function Footer() {
 
       <div className="border-t border-stroke-muted">
         <div className="mx-auto flex max-w-[1200px] flex-wrap items-center justify-between gap-2 px-6 py-4 font-mono text-[11px] text-text-quaternary">
-          <span>RDPMS POC LLD · built to RDSO/SPN/257/2025 v2.0</span>
+          <span>RDPMS LLD · built to RDSO/SPN/257/2025 v2.0</span>
           <div className="flex items-center gap-2">
             <span>Engineering dossier · seven layers · one station</span>
             <span className="mx-1 h-3 w-px bg-stroke-default" />

@@ -15,7 +15,7 @@ export function Eyebrow({ children, className = '' }: { children: ReactNode; cla
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: EASE }}
-      className={`${FONT_MONO} text-[11px] uppercase tracking-[0.14em] text-flow-poc ${className}`}
+      className={`${FONT_MONO} text-[11px] uppercase tracking-[0.14em] text-flow-required ${className}`}
     >
       {children}
     </motion.p>
@@ -67,7 +67,7 @@ export function SpecChip({
   inView?: boolean
 }) {
   const tones: Record<string, string> = {
-    orange: 'bg-flow-poc/15 text-flow-poc border-flow-poc/30',
+    orange: 'bg-flow-required/15 text-flow-required border-flow-required/30',
     slate: 'bg-container text-text-secondary border-stroke-default',
     navy: 'bg-raised text-text-primary border-stroke-default',
   }

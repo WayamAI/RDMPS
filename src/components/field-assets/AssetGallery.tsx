@@ -17,9 +17,9 @@ const ASSETS: Asset[] = [
   {
     photo: '/photo-point-machine.jpg',
     alt: 'Electro-mechanical point machine mounted beside railway turnout rails',
-    caption: 'Plate 01 · Point machine  POC pilot site',
+    caption: 'Plate 01 · Point machine · Required system site',
     title: 'Point Machines  EOP 00',
-    body: 'The highest-value asset in the POC. Every throw is captured as a 20 ms-resolution current signature and compared against 15-day, state-conditional rolling averages (N→R and R→N separately).',
+    body: 'The highest-value asset in the Required system. Every throw is captured as a 20 ms-resolution current signature and compared against 15-day, state-conditional rolling averages (N→R and R→N separately).',
     sensors: [
       'motor current (DC-A)',
       'operating voltage',
@@ -37,7 +37,7 @@ const ASSETS: Asset[] = [
     alt: 'DC track circuit feed relay in a location box beside running rails',
     caption: 'Plate 02 · DC track circuit  bonded rail feed',
     title: 'DC Track Circuits  DCT 20',
-    body: 'Nine parameters per circuit: feed/relay-end voltage and current, ballast leakage, relay pickup/dropaway signatures. Track logics use the richest threshold set in Annexure C (LD1/LD2/LD3, HD1/HD2).',
+    body: 'Nine parameters per circuit: feed/relay-end voltage and current, ballast leakage, relay pickup/dropaway signatures. Track logics use the richest threshold set in requirement module C (LD1/LD2/LD3, HD1/HD2).',
     chips: ['9 sensors', 'LD1 80 · LD2 50 · LD3 90 · HD1 120 · HD2 150'],
   },
   {
@@ -69,7 +69,7 @@ const ASSETS: Asset[] = [
     alt: 'Railway control centre wall of monitors with dashboards and alert panels',
     caption: 'Plate 06 · Control centre  data consumption',
     title: 'Where the data lands',
-    body: 'Annexure E web dashboards for JE/SSE/ASTE/DSTE, Annexure G mobile app with Ack, and the common Railway dashboard fed by five Annexure F APIs.',
+    body: 'Requirement module E web dashboards for JE/SSE/ASTE/DSTE, requirement module G mobile app with Ack, and the common Railway dashboard fed by five requirement module F APIs.',
     chips: ['≤1 min alert latency', 'one-alert-per-asset'],
   },
 ]
@@ -146,7 +146,7 @@ export default function AssetGallery() {
                       variants={sensorItem}
                       className={`${FONT_MONO} flex items-center gap-2 text-[11px] text-text-tertiary`}
                     >
-                      <span className="inline-block h-[5px] w-[5px] rounded-full bg-flow-poc" />
+                      <span className="inline-block h-[5px] w-[5px] rounded-full bg-flow-required" />
                       ≥8 sensors
                     </motion.li>
                   </motion.ul>

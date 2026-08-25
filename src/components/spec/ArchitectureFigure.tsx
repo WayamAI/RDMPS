@@ -2,40 +2,38 @@ import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 import SectionHeader, { EASE_OUT_EXPO } from './SectionHeader';
 import { LAYER_MAP } from './data';
+import { MermaidDiagram } from '@/components/MermaidDiagram';
+import { ARCHITECTURE_MERMAID } from '@/lib/mermaidDiagrams';
 
 export default function ArchitectureFigure() {
   return (
     <section className="mx-auto max-w-[1200px] px-4 py-20 sm:px-6 md:py-28">
       <SectionHeader
         eyebrow="Figure · Reference Architecture"
-        title="The five-layer model, mapped to seven bands"
-        sub="The RDSO specification's reference figure is the skeleton of this site. Each layer in the figure corresponds to one or more numbered bands in the animated LLD diagram."
+        title="The approved system path, mapped to seven bands"
+        sub="The RDSO reference figures show the required field-to-application path. Each subsystem corresponds to one or more numbered bands in the design diagram."
       />
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
-        {/* figure board */}
         <motion.figure
-          initial={{ opacity: 0, filter: 'blur(14px)', scale: 0.985 }}
-          whileInView={{ opacity: 1, filter: 'blur(0px)', scale: 1 }}
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-15% 0px' }}
-          transition={{ duration: 0.6, ease: EASE_OUT_EXPO }}
+          transition={{ duration: 0.55, ease: EASE_OUT_EXPO }}
           className="overflow-hidden rounded-3xl border border-stroke-default bg-container p-4 shadow-xl md:p-6"
         >
-          <div className="overflow-hidden rounded-2xl border border-stroke-default bg-raised p-2">
-            <img
-              src="/rdpms_architecture.png"
-              alt="RDPMS POC five-layer reference architecture schematic"
-              className="block h-auto w-full rounded-xl"
-              loading="lazy"
+          <div className="overflow-hidden rounded-2xl border border-stroke-default bg-raised p-3 md:p-4">
+            <MermaidDiagram
+              chart={ARCHITECTURE_MERMAID}
+              ariaLabel="RDPMS reference architecture schematic"
+              className="min-h-[420px]"
             />
           </div>
           <figcaption className="mt-4 px-1 pb-1 font-mono text-[11px] uppercase tracking-[0.1em] text-text-tertiary">
-            RDPMS POC reference architecture  layered view (after RDSO/SPN/257/2025 Figure-1 /
-            Figure-2)
+            RDPMS reference architecture — design view based on RDSO/SPN/257/2025
           </figcaption>
         </motion.figure>
 
-        {/* mapping note card */}
         <motion.aside
           initial={{ opacity: 0, x: 40 }}
           whileInView={{ opacity: 1, x: 0 }}
@@ -52,10 +50,10 @@ export default function ArchitectureFigure() {
                 key={row.figure}
                 className="group flex items-center justify-between gap-3 py-2.5 transition-colors duration-200"
               >
-                <span className="text-sm font-medium text-text-secondary transition-colors duration-200 group-hover:text-flow-poc">
+                <span className="text-sm font-medium text-text-secondary transition-colors duration-200 group-hover:text-flow-required">
                   {row.figure}
                 </span>
-                <span className="flex items-center gap-2 font-mono text-[11px] text-text-tertiary transition-colors duration-200 group-hover:text-flow-poc">
+                <span className="flex items-center gap-2 font-mono text-[11px] text-text-tertiary transition-colors duration-200 group-hover:text-flow-required">
                   <ArrowRight
                     className="h-3 w-3 opacity-40 transition-opacity duration-200 group-hover:opacity-100"
                     strokeWidth={2}

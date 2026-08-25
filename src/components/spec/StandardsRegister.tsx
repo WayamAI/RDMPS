@@ -6,7 +6,7 @@ import { STANDARDS } from './data';
 import type { Standard } from './data';
 
 const ACCENT_CLASSES: Record<Standard['accent'], string> = {
-  orange: 'bg-flow-poc/15 text-flow-poc border border-flow-poc/30',
+  orange: 'bg-flow-required/15 text-flow-required border border-flow-required/30',
   blue: 'bg-blue-500/15 text-blue-400 border border-blue-500/30',
   slate: 'bg-raised text-text-secondary border border-stroke-default',
 };
@@ -72,8 +72,8 @@ export default function StandardsRegister() {
     <section className="mx-auto max-w-[1200px] px-4 py-20 sm:px-6 md:py-28">
       <SectionHeader
         eyebrow="Standards Register · Referenced Bodies"
-        title="Six bodies, zero proprietary silos"
-        sub="The design rests strictly on published Indian and international standards  C-DOT CCSP, IEC, ISO/IEC, ITU-T, BIS, and NCCS ITSAR."
+        title="Seven bodies, one interoperability baseline"
+        sub="This register lists only standards and certifications referenced by the approved RDPMS document."
       />
 
       <motion.div

@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Eyebrow, SpecChip, CodeBlock } from '@/components/home/atoms';
 import Reveal from '@/components/home/Reveal';
+import { MermaidDiagram } from '@/components/MermaidDiagram';
+import { PACKET_FLOW_MERMAID } from '@/lib/mermaidDiagrams';
 
 interface Packet {
   id: string;
@@ -280,6 +282,19 @@ export default function SectionPackets() {
           </div>
         </Reveal>
 
+        <Reveal delay={0.06} className="mt-8">
+          <div className="overflow-hidden rounded-2xl border border-stroke-default bg-container p-4 md:p-5">
+            <div className="font-mono text-[11px] uppercase tracking-[0.14em] text-text-tertiary">
+              Packet path · field to alert
+            </div>
+            <MermaidDiagram
+              chart={PACKET_FLOW_MERMAID}
+              ariaLabel="MQTT packet flow from IoT node through gateway, ISP, ingestion, logic, and alerts"
+              className="mt-3 min-h-[160px]"
+            />
+          </div>
+        </Reveal>
+
         <Reveal delay={0.1} className="mt-10">
           <Tabs value={active} onValueChange={setActive}>
             <TabsList className="flex h-auto flex-nowrap justify-start gap-1 overflow-x-auto bg-transparent p-0 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:flex-wrap sm:overflow-visible">
@@ -288,7 +303,7 @@ export default function SectionPackets() {
                   ref={(el) => { triggerRefs.current[p.id] = el; }}
                   key={p.id}
                   value={p.id}
-                  className="flex-none shrink-0 rounded-md border border-stroke-default bg-container px-3 py-1.5 font-mono text-[11px] text-text-secondary data-[state=active]:border-flow-poc data-[state=active]:bg-flow-poc/15 data-[state=active]:text-flow-poc"
+                  className="flex-none shrink-0 rounded-md border border-stroke-default bg-container px-3 py-1.5 font-mono text-[11px] text-text-secondary data-[state=active]:border-flow-required data-[state=active]:bg-flow-required/15 data-[state=active]:text-flow-required"
                 >
                   {p.id}
                 </TabsTrigger>
@@ -299,13 +314,13 @@ export default function SectionPackets() {
                 <div className="grid gap-6 lg:grid-cols-[60fr_40fr]">
                   <CodeBlock code={p.json} title={`${p.id}.json`} />
                   <div>
-                    <div className="rounded-xl border border-flow-poc/30 bg-flow-poc/10 p-4 text-[13.5px] leading-relaxed text-text-primary">
+                    <div className="rounded-xl border border-flow-required/30 bg-flow-required/10 p-4 text-[13.5px] leading-relaxed text-text-primary">
                       {p.note}
                     </div>
                     <ul className="mt-4 space-y-2.5">
                       {p.fields.map(([f, d]) => (
                         <li key={f} className="flex items-baseline gap-3 text-[13px]">
-                          <code className="shrink-0 rounded bg-raised border border-stroke-muted px-2 py-0.5 font-mono text-[11px] text-flow-poc font-semibold">
+                          <code className="shrink-0 rounded bg-raised border border-stroke-muted px-2 py-0.5 font-mono text-[11px] text-flow-required font-semibold">
                             {f}
                           </code>
                           <span className="text-text-secondary">{d}</span>

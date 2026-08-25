@@ -17,7 +17,7 @@ export default function SectionHeader({ eyebrow, title, sub }: SectionHeaderProp
       transition={{ duration: 0.45, ease: EASE_OUT_EXPO }}
       className="mb-10"
     >
-      <p className="font-mono text-[11px] font-medium uppercase tracking-[0.14em] text-flow-poc">
+      <p className="font-mono text-[11px] font-medium uppercase tracking-[0.14em] text-flow-required">
         {eyebrow}
       </p>
       <h2 className="mt-3 font-display text-3xl font-bold tracking-tight text-text-primary md:text-4xl">

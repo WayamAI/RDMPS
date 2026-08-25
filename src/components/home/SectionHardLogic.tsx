@@ -78,7 +78,7 @@ function AverageChart() {
         d={trace}
         fill="none"
         strokeWidth="2"
-        className="stroke-flow-poc"
+        className="stroke-flow-required"
         initial={{ pathLength: 0 }}
         animate={inView ? { pathLength: 1 } : undefined}
         transition={{ duration: 1.2, ease: 'easeInOut' }}
@@ -120,7 +120,7 @@ export default function SectionHardLogic() {
     <section id="dd-hard-logic" className="border-t border-stroke-default bg-page py-24">
       <div className="mx-auto max-w-[1200px] scroll-mt-24 px-6">
         <Reveal>
-          <Eyebrow>04 · Annexure C</Eyebrow>
+          <Eyebrow>04 · Requirement module C</Eyebrow>
           <h2 className="mt-3 font-display text-[34px] font-bold tracking-tight-display text-text-primary">
             142 deterministic logics before any AI speaks.
           </h2>
@@ -172,7 +172,7 @@ export default function SectionHardLogic() {
             </div>
             <div className="mt-4 flex flex-wrap gap-2">
               <SpecChip>dwell filters transient spikes</SpecChip>
-              <SpecChip tone="slate">Annexure C mandatory set</SpecChip>
+              <SpecChip tone="slate">Requirement module C mandatory set</SpecChip>
             </div>
           </Reveal>
         </div>

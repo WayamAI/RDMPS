@@ -45,11 +45,11 @@ function Hero() {
             initial={{ opacity: 0, x: 60, rotate: 4, boxShadow: '0 4px 12px rgba(9,9,11,0.08)' }}
             animate={{ opacity: 1, x: 0, rotate: 1.5, boxShadow: '0 24px 56px rgba(9,9,11,0.16)' }}
             transition={{ duration: 0.7, ease: EASE, delay: 0.25 }}
-            className="relative rounded-2xl border-2 border-flow-poc/40 bg-raised p-2"
+            className="relative rounded-2xl border-2 border-flow-required/40 bg-raised p-2"
           >
             <img
               src="/photo-point-machine.jpg"
-              alt="Point machine at the POC pilot station"
+              alt="Point machine at the Required system station"
               className="aspect-[16/10] w-full rounded-xl object-cover"
             />
           </motion.div>
@@ -59,7 +59,7 @@ function Hero() {
             transition={{ duration: 0.5, delay: 0.8 }}
             className={`${FONT_MONO} mt-4 text-right text-[10px] uppercase tracking-[0.12em] text-text-quaternary`}
           >
-            Point machine, mid-size interlocked station  POC pilot site
+            Point machine, mid-size interlocked station · Required system site
           </motion.p>
         </div>
       </div>
