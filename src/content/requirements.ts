@@ -20,7 +20,7 @@ export interface CapabilityGroup {
   requirements: readonly Requirement[];
 }
 
-export const CAPABILITY_GROUPS: CapabilityGroup[] = [
+export const CAPABILITY_GROUPS = [
   {
     id: 'field-acquisition',
     title: 'Field sensing and acquisition',
