@@ -6,7 +6,6 @@ import { useDiagram } from '@/lib/diagram-context';
 const LINKS = [
   { to: '/deep-dive', label: 'Deep Dive' },
   { to: '/field-assets', label: 'Field Assets' },
-  { to: '/delivery-plan', label: 'Delivery Plan' },
   { to: '/spec', label: 'Requirements' },
 ];
 
@@ -92,7 +91,7 @@ export default function Footer() {
           <p className="mt-4 font-mono text-[11px] leading-relaxed text-text-quaternary">
             REQUIRED SYSTEM · SINGLE INTERLOCKED STATION
             <br />
-            18-MONTH DELIVERY PLAN · REQUIRED ASSET SET
+            REQUIRED ASSET SET · SURVEY-DRIVEN SCOPE
             <br />
             MQTT/mTLS · ISP MIDDLEWARE
           </p>

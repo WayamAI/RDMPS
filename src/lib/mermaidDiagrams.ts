@@ -59,33 +59,6 @@ flowchart TB
   class FAR,SMMS,DASH all
 `;
 
-/** Mermaid Gantt for the Delivery Plan · M1–M18 overlapping phases. */
-export const TIMELINE_MERMAID = `
-gantt
-    title RDPMS Delivery Plan — overlapping, compliance-led phasing
-    dateFormat YYYY-MM-DD
-    axisFormat M%m
-    tickInterval 1month
-
-    section P0 Mobilization
-    Design & survey          :p0, 2025-01-01, 2025-03-31
-
-    section P1 Lab bench
-    Bench + packet suite     :p1, 2025-02-01, 2025-06-30
-
-    section P2 Certifications
-    Type tests & TEC/STQC    :p2, 2025-05-01, 2025-10-31
-
-    section P3 Field install
-    Fitment & commissioning  :p3, 2025-08-01, 2025-11-30
-
-    section P4 Soak & AI/ML
-    Monitored soak           :p4, 2025-11-01, 2026-05-31
-
-    section P5 Graduation
-    Evaluation & close-out   :p5, 2026-04-01, 2026-06-30
-`;
-
 /** Deep Dive · MQTT packet / topic path. */
 export const PACKET_FLOW_MERMAID = `
 flowchart LR

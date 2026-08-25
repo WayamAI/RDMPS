@@ -10,14 +10,7 @@ const FORBIDDEN = new RegExp(
   'i',
 );
 const LEGACY_ROUTE = ['/po', 'c-roadmap'].join('');
-const LEGACY_ROUTE_ELEMENT = new RegExp(
-  [
-    '<Route\\s+path="',
-    LEGACY_ROUTE,
-    '"\\s+element=\\{<Navigate\\s+to="/delivery-plan"\\s+replace\\s*/>\\}\\s*/>',
-  ].join(''),
-  'g',
-);
+const REMOVED_PAGE = '/delivery-plan';
 const PACKAGE_LOCK = resolve(ROOT, 'package-lock.json');
 const EXCLUDED_DIRECTORIES = new Set(['.git', 'dist', 'node_modules']);
 const EXCLUDED_FILES = new Set([
@@ -90,7 +83,6 @@ describe('repository terminology', () => {
     const violations: string[] = [];
     const appPath = resolve(ROOT, 'src', 'App.tsx');
     const appSource = readFileSync(appPath, 'utf8');
-    const redirectPathAttribute = `path="${LEGACY_ROUTE}"`;
 
     paths.forEach((path) => {
       const repositoryPath = relative(ROOT, path).replaceAll('\\', '/');
@@ -102,18 +94,15 @@ describe('repository terminology', () => {
       if (file === PACKAGE_LOCK) continue;
 
       readFileSync(file, 'utf8').split(/\r?\n/).forEach((line, index) => {
-        const content =
-          file === appPath ? line.replace(redirectPathAttribute, 'path=""') : line;
-        addViolation(violations, `${repositoryPath}:${index + 1}`, content);
+        addViolation(violations, `${repositoryPath}:${index + 1}`, line);
       });
     }
 
     const lock: unknown = JSON.parse(readFileSync(PACKAGE_LOCK, 'utf8'));
     scanPackageLock(lock, 'package-lock', violations);
 
-    expect(appSource.split(LEGACY_ROUTE)).toHaveLength(2);
-    expect(appSource.split(redirectPathAttribute)).toHaveLength(2);
-    expect(appSource.match(LEGACY_ROUTE_ELEMENT)).toHaveLength(1);
+    expect(appSource).not.toContain(REMOVED_PAGE);
+    expect(appSource).not.toContain(LEGACY_ROUTE);
     expect(violations).toEqual([]);
   });
 
@@ -133,14 +122,10 @@ describe('repository terminology', () => {
     expect(wrongProperty).toHaveLength(1);
   });
 
-  it('exempts only the legacy route path attribute', () => {
-    const redirectPathAttribute = `path="${LEGACY_ROUTE}"`;
-    const otherObsoleteTerm = ['clau', 'se'].join('');
-    const routeWithOtherJargon =
-      `<Route ${redirectPathAttribute} element={<Navigate to="/delivery-plan" replace />} />` +
-      ` // ${otherObsoleteTerm}`;
-    const scannedContent = routeWithOtherJargon.replace(redirectPathAttribute, 'path=""');
-
-    expect(FORBIDDEN.test(scannedContent)).toBe(true);
+  it('keeps the removed page and legacy roadmap route out of the app shell', () => {
+    const appSource = readFileSync(resolve(ROOT, 'src', 'App.tsx'), 'utf8');
+    expect(appSource).not.toContain(REMOVED_PAGE);
+    expect(appSource).not.toContain(LEGACY_ROUTE);
+    expect(appSource).not.toContain('DeliveryPlan');
   });
 });

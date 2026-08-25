@@ -10,7 +10,6 @@ const NAV_LINKS = [
   { to: '/', label: 'LLD Diagram' },
   { to: '/deep-dive', label: 'Deep Dive' },
   { to: '/field-assets', label: 'Field Assets' },
-  { to: '/delivery-plan', label: 'Delivery Plan' },
   { to: '/spec', label: 'Requirements' },
 ];
 
